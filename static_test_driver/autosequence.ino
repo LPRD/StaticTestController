@@ -21,6 +21,11 @@
 // Max outlet temperature before triggering a shutdown
 #define MAX_COOLANT_TEMP 60
 
+#if CONFIGURATION != DEMO
+#define MAX_PRESSURE_FUEL 150 //TODO: Cement this value
+#define MAX_PRESSURE_OX 150 //TODO: Cement this value
+#endif
+
 // Min thrust that must be reached to avoid triggering a no-ignition shutdown
 #if CONFIGURATION == DEMO
 #define MIN_THRUST 50
@@ -195,6 +200,17 @@ void run_control() {
         Serial.println(F("Thrust below critical level"));
         abort_autosequence();
       }
+       // Check that the pressure of the fuel and oxidizer line have not exceeded the maximum limit
+#if CONFIGURATION != DEMO
+      else if (run_time >= STARTUP_TIME && pressure_fuel > MAX_PRESSURE_FUEL) {
+        Serial.println(F("Fuel pressue above critical level"));
+        abort_autosequence();
+      }
+      else if (run_time >= STARTUP_TIME && pressure_ox > MAX_PRESSURE_OX) {
+        Serial.println(F("Oxidizer pressure above critical level"));
+        abort_autosequence();
+      }
+#endif    
 
       if (run_time >= RUN_TIME) {
         SET_STATE(OXYGEN_SHUTDOWN)
