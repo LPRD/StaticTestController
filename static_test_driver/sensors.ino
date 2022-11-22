@@ -14,7 +14,9 @@ String sensor_errors = "";
 
 
 void update_sensor_errors() {
-  set_lcd_errors(sensor_errors);
+ // set_lcd_errors(sensor_errors);
+ //print sensor errors
+ Serial.println(sensor_errors);
   sensor_errors = "";
 }
 
@@ -94,33 +96,30 @@ float LoadCell::read_force() {
 
 //SENSOR DEVICE 2
 
-
 float Thermocouple::read_temp() {
-  float result = analogRead(m_thermocouplepin) * 5.0 * 100 / 1024;
+  m_thermocouple.requestTemperatures();
+  
+  float result = m_thermocouple.getTempC(m_address);
   error_check(m_error, result > TEMP_MIN_VALID && result < TEMP_MAX_VALID, "temp", m_sensor_name, m_sensor_short_name);
   return result;
 }
 
-void Thermocouple::init_thermocouple() {
-
-  pinMode(m_thermocouplepin, INPUT);
-  
-  int error = 0;
+void Thermocouple::init_thermocouple() 
+{
   m_thermocouple.begin();
-  read_thermocouple();
-  if (!m_error) {
+
+  if(!m_thermocouple.getAddress(m_address, 0))
+  {
+    Serial.print(m_sensor_name);
+    Serial.println("Thermocouple cannot be found");
+  }
+  else{
     Serial.print(m_sensor_name);
     Serial.println(F(" theromocouple connected"));
+    m_thermocouple.setResolution(9); //2 decimals 
   }
   delay(100);
 }
-
-float Thermocouple::read_thermocouple() {
-  float result = m_thermocouple.readCelsius();
-  error_check(m_error, !isnan(result) && result > 0, "thermocouple", m_sensor_name, m_sensor_short_name);
-  return result;
-}
-
 
 
 //-------------------------------------------------------------------------------------------

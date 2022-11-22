@@ -44,21 +44,6 @@
 
 //IGNITER DEFINES END 
 
-
-
-
-
-//LCD DEFINES BEGIN
-
-#define WIDTH 16
-#define SCROLL_PERIOD 700 // milliseconds
-
-//LCD DEFINES END 
-
-
-
-
-
 //STATIC TEST DRIVER DEFINES BEGIN 
 
 #define INLET_TEMP A5
@@ -143,7 +128,9 @@ class LoadCell
 class Thermocouple 
 {
   private:
-  Adafruit_MAX31855 m_thermocouple;
+  DallasTemperature m_thermocouple;
+  DeviceAddress m_address;
+  OneWire m_onewire;
   public:
   int m_thermocouplepin;
   int m_error;
@@ -152,14 +139,17 @@ class Thermocouple
 
   float m_current_temp;
 
-  Thermocouple(int8_t pin, const String& name, const String& shortname) : m_thermocouplepin {pin}, m_sensor_name { name } , m_sensor_short_name { shortname }, m_error{0} , m_thermocouple{pin}, m_current_temp{0} {} 
+  //I am avoiding to initialize the onjects here, one wire etc, in case brace init doesnt work later on in the code 
+  
+  Thermocouple(int pin, const String& name, const String& shortname) : m_thermocouplepin {pin}, m_sensor_name { name } , m_sensor_short_name { shortname }, m_error{0} , m_current_temp{0.0}
+  ,m_onewire{(uint8_t)m_thermocouplepin}, m_thermocouple{&m_onewire} {}
+  
   
   void init_thermocouple();
-  float read_thermocouple();
   float read_temp();
 
   void updateTemps() {
-    m_current_temp = read_thermocouple();
+    m_current_temp = read_temp();
   }
 
 };

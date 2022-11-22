@@ -8,6 +8,10 @@
 #include <Adafruit_LiquidCrystal.h>
 #include <Telemetry.h>
 #include <avr/pgmspace.h>
+
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
 #include "defs.h"
 
 //declare pressure transducers
@@ -55,10 +59,6 @@ char data_name[20] = "";
 void (*reset)(void) = 0;
 
 void setup() {
-    // Initialize LCD, set up the number of rows and columns
-    lcd.begin(16, 2);
-    set_lcd_status("Initializing...");
-
     // Initialize serial
     while (!Serial);
     Serial.begin(115200);
@@ -112,6 +112,7 @@ void loop() {
     // Grab thermocouple data 
     thermocouple_1.updateTemps();
     thermocouple_2.updateTemps();
+
    
     // Update sensor diagnostic message on LCD
     update_sensor_errors();
@@ -122,21 +123,18 @@ void loop() {
     // Send collected data
   
     BEGIN_SEND
-        SEND_ITEM(force, loadcell_1.m_current_force)
-        SEND_ITEM(force, loadcell_2.m_current_force)
-        SEND_ITEM(force, loadcell_3.m_current_force)
-        SEND_ITEM(force, loadcell_4.m_current_force)
-        //Don't think I can send force data to separate locations right now
+        SEND_ITEM(force1, loadcell_1.m_current_force)
+        SEND_ITEM(force2, loadcell_2.m_current_force)
+        SEND_ITEM(force3, loadcell_3.m_current_force)
+        SEND_ITEM(force4, loadcell_4.m_current_force)
         
-        //SEND_ITEM(outlet_temp, outlet_temp)
-        //SEND_ITEM(inlet_temp, inlet_temp)
+        SEND_ITEM(outlet_temp, thermocouple_1.m_current_temp)
+        SEND_ITEM(inlet_temp, thermocouple_2.m_current_temp)
         
         SEND_ITEM(fuel_press, pressure_fuel.m_current_pressure)
         SEND_ITEM(ox_press, pressure_ox.m_current_pressure)
         SEND_ITEM(fuel_inj_press, pressure_fuel_injector.m_current_pressure)
         SEND_ITEM(ox_inj_press, pressure_ox_injector.m_current_pressure)
-        //send thermocouple data
-        //What keywords to use?
         
     SEND_ITEM(sensor_status, sensor_status)
         END_SEND
@@ -188,13 +186,19 @@ void loop() {
        valve_fuel_pre.set_valve(valve_command);
     }
     READ_FIELD(fuel_main_command, "%d", valve_command) {
-        valve_fuel_pre.set_valve(valve_command);
+        valve_fuel_main.set_valve(valve_command);
     }
     READ_FIELD(ox_pre_command, "%d", valve_command) {
-        valve_fuel_pre.set_valve(valve_command);
+        valve_ox_pre.set_valve(valve_command);
     }
     READ_FIELD(ox_main_command, "%d", valve_command) {
-        valve_fuel_pre.set_valve(valve_command);
+        valve_ox_main.set_valve(valve_command);
+    }
+    READ_FIELD(nitro_fill_setting, "%d", valve_command) {
+        valve_n2_choke.set_valve(valve_command);
+    }
+    READ_FIELD(nitro_drain_setting, "%d", valve_command) {
+        valve_n2_drain.set_valve(valve_command);
     }
     READ_DEFAULT(data_name, data) {
         Serial.print(F("Invalid data field recieved: "));
