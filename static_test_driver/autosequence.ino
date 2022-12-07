@@ -12,11 +12,7 @@
 #define PRE_LEADTIME       1000           // Delay between closing oxygen prestage valve and closing both mainstage valves (1 second)
 #define HEARTBEAT_TIMEOUT  1000           // Timeout to abort run after not recieving heartbeat signal (1 second)
 
-#if CONFIGURATION == DEMO
-  #define COUNTDOWN_DURATION  10000       // 10 seconds
-  #define RUN_TIME            10000       // 10 seconds
-  #define COOLDOWN_TIME       10000       // 10 seconds
-#elseif CONFIGURATION == MK_2_FULL
+#if CONFIGURATION == MK_2_FULL
   #define COUNTDOWN_DURATION  60000       // 1 minute
   #define RUN_TIME            10000       // 10 seconds
   #define COOLDOWN_TIME       60000 * 10  // 10 minutes
@@ -24,46 +20,52 @@
   #define COUNTDOWN_DURATION  60000       // 1 minute
   #define RUN_TIME            2000        // 2 seconds
   #define COOLDOWN_TIME       60000 * 5   // 5 minutes
+#else
+  #define COUNTDOWN_DURATION  10000       // 10 seconds
+  #define RUN_TIME            10000       // 10 seconds
+  #define COOLDOWN_TIME       10000       // 10 seconds
 #endif
 
 //***Limits***//
 #define MAX_COOLANT_TEMP 60               // states max outlet temperature (60°C)
-
-#if CONFIGURATION == DEMO
-  #define MIN_THRUST  50
-#elseif CONFIGURATION == MK_2_FULL
+  
+#if CONFIGURATION == MK_2_FULL
   #define MIN_THRUST  1000                // Min thrust that must be reached to avoid triggering a no-ignition shutdown (1000 Newtons)
 #elseif CONFIGURATION == MK_2_LOW
   #define MIN_THRUST  100                 // Min thrust that must be reached to avoid triggering a no-ignition shutdown (100 Newtons)
+#else
+  #define MIN_THRUST  50
 #endif
 
 //***LED's***//
-#if CONFIGURATION == DEMO
-  #define TERMINAL_COUNT_LED_PERIOD 10000       // 1 minute
-  #define COOL_DOWN_LED_PERIOD      10000       // 1 minute
-#elseif CONFIGURATION == MK_2_FULL
+#if CONFIGURATION == MK_2_FULL
   #define TERMINAL_COUNT_LED_PERIOD 60000       // 1 minute
   #define COOL_DOWN_LED_PERIOD      60000 * 10  // 10 minutes
 #elseif CONFIGURATION == MK_2_LOW
   #define TERMINAL_COUNT_LED_PERIOD 60000       // 1 minute
   #define COOL_DOWN_LED_PERIOD      60000 * 5   // 5 minutes
+#else
+  #define TERMINAL_COUNT_LED_PERIOD 10000       // 1 minute
+  #define COOL_DOWN_LED_PERIOD      10000       // 1 minute
 #endif
 
+const char *states[8] = {"STAND_BY",
+  "TERMINAL_COUNT",
+  "PRESTAGE_READY",
+  "PRESTAGE",
+  "MAINSTAGE",
+  "OXYGEN_SHUTDOWN",
+  "SHUTDOWN",
+  "COOL_DOWN"
+};
 
-typedef enum{
-  STAND_BY,
-  TERMINAL_COUNT,
-  PRESTAGE_READY,
-  PRESTAGE,
-  MAINSTAGE,
-  OXYGEN_SHUTDOWN,
-  SHUTDOWN,
-  COOL_DOWN
-}state_t;
+void write_state(const char *state_name){
+  SEND(status, state_name);
+}
 
-#define SET_STATE(STATE){
-  state = STATE;
-  write_state(#STATE);
+void set_state(state_t state, state_t * state_var) {
+  *state_var = state;
+  write_state(states[state]);
 }
 
 long start_time     = 0;
@@ -71,11 +73,6 @@ long shutdown_time  = 0;
 long heartbeat_time = 0;
 
 state_t state = STAND_BY;
-
-void write_state(const char *state_name){
-  set_lcd_status(state_name);
-  SEND(status, state_name);
-}
 
 void blink(int led, long period){
   digitalWrite(led, (int)((millis() % (period * 2)) / period));
@@ -86,14 +83,14 @@ void heartbeat(){
 }
 
 void init_autosequence(){
-  SET_STATE(STAND_BY);
+  set_state(STAND_BY, &state);
 }
 
 void start_countdown(){
   #if CONFIGURATION != DEMO
     if (sensor_status == false){
       Serial.println(F("Countdown aborted due to sensor failure"));
-      SET_STATE(STAND_BY);
+      set_state(STAND_BY, &state);
     }else
   #endif
   if (valve_fuel_pre.m_current_state  ||
@@ -103,11 +100,11 @@ void start_countdown(){
       valve_n2_choke.m_current_state  ||
       valve_n2_drain.m_current_state  ){
         Serial.println(F("Countdown aborted due to unexpected initial valve state."));
-        SET_STATE(STAND_BY);
+        set_state(STAND_BY, &state);
   }
   else{
     Serial.println(F("Countdown has started"));
-    SET_STATE(TERMINAL_COUNT);
+    set_state(TERMINAL_COUNT, &state);
     start_time = millis();
     heartbeat();
   }
@@ -118,14 +115,14 @@ void abort_autosequence(){
   switch (state){
     case STAND_BY:
     case TERMINAL_COUNT:
-      SET_STATE(STAND_BY);
+      set_state(STAND_BY, &state);
       break;
 
     case PRESTAGE_READY:
       valve_n2_choke.set_valve(0);
       valve_fuel_pre.set_valve(0);
       valve_ox_pre.set_valve(0);
-      SET_STATE(STAND_BY);
+      set_state(STAND_BY, &state);
       break;
 
     case PRESTAGE:
@@ -133,7 +130,7 @@ void abort_autosequence(){
       valve_fuel_pre.set_valve(0);
       valve_ox_pre.set_valve(0);
       reset_igniter();
-      SET_STATE(COOL_DOWN);
+      set_state(COOL_DOWN, &state);
       shutdown_time = millis();
       break;
 
@@ -141,7 +138,7 @@ void abort_autosequence(){
       valve_n2_choke.set_valve(0);
       valve_fuel_pre.set_valve(0);
       valve_ox_pre.set_valve(0);
-      SET_STATE(SHUTDOWN);
+      set_state(SHUTDOWN, &state);
       shutdown_time = millis();
       break;
   }
@@ -162,9 +159,9 @@ void run_control(){
 
   switch (state){
     case STAND_BY:
-      if (!sensor_status){
-        set_lcd_status("Sensor Failure");
-      }
+      // if (!sensor_status){
+      //   set_lcd_status("Sensor Failure");
+      // }
       break;
 
     case TERMINAL_COUNT:
@@ -178,14 +175,14 @@ void run_control(){
         valve_fuel_pre.set_valve(1);
         valve_n2_choke.set_valve(1);
         valve_ox_pre.set_valve(1);
-        SET_STATE(PRESTAGE_READY);
+        set_state(PRESTAGE_READY, &state);
       }
       break;
 
     case PRESTAGE_READY:
       if (run_time >= PRESTAGE_TIME){
         fire_igniter();
-        SET_STATE(PRESTAGE);
+        set_state(PRESTAGE, &state);
       }
       break;
 
@@ -193,7 +190,7 @@ void run_control(){
       if (run_time >= MAINSTAGE_TIME){
         valve_fuel_main.set_valve(1);
         valve_ox_main.set_valve(1);
-        SET_STATE(MAINSTAGE);
+        set_state(MAINSTAGE, &state);
       }
       break;
 
@@ -214,7 +211,7 @@ void run_control(){
       }
 
       if (run_time >= RUN_TIME){
-        SET_STATE(OXYGEN_SHUTDOWN);
+        set_state(OXYGEN_SHUTDOWN, &state);
         valve_ox_pre.set_valve(0);
         shutdown_time = millis();
       }
@@ -224,7 +221,7 @@ void run_control(){
       if (millis() >= shutdown_time + OX_LEADTIME){
         valve_n2_choke.set_valve(0);
         valve_fuel_pre.set_valve(0);
-        SET_STATE(SHUTDOWN);
+        set_state(SHUTDOWN, &state);
       }
       break;
 
@@ -233,18 +230,18 @@ void run_control(){
         valve_ox_main.set_valve(0);
         valve_fuel_main.set_valve(0);
         valve_n2_drain.set_valve(1);
-        SET_STATE(COOL_DOWN);
+        set_state(COOL_DOWN, &state);
       }
       break;
 
     case COOL_DOWN:
-      if (!valve_n2_drain.set_valve()){
+      if (!valve_n2_drain.m_current_state){
         valve_n2_drain.set_valve(1);
       }
       if (millis() - shutdown_time >= COOLDOWN_TIME){
         Serial.println(F("Run finished"));
         valve_n2_drain.set_valve(0);
-        SET_STATE(STAND_BY);
+        set_state(STAND_BY, &state);
         start_time = 0;
       }
       break;

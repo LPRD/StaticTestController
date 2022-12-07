@@ -81,8 +81,19 @@ int temp_error[NUMBER_OF_TEMP_SENSORS] = { 0,0 };
 #define THERMOCOUPLE_PIN_1 45 //PLACEHOLDER
 #define THERMOCOUPLE_PIN_2 46 //PLACEHOLDER
 
+typedef enum{
+  STAND_BY,
+  TERMINAL_COUNT,
+  PRESTAGE_READY,
+  PRESTAGE,
+  MAINSTAGE,
+  OXYGEN_SHUTDOWN,
+  SHUTDOWN,
+  COOL_DOWN
+}state_t;
 
-
+//Yikes
+void init_autosequence();
 
 //CLASS DECLARATIONS 
 
@@ -141,8 +152,14 @@ class Thermocouple
 
   //I am avoiding to initialize the onjects here, one wire etc, in case brace init doesnt work later on in the code 
   
-  Thermocouple(int pin, const String& name, const String& shortname) : m_thermocouplepin {pin}, m_sensor_name { name } , m_sensor_short_name { shortname }, m_error{0} , m_current_temp{0.0}
-  ,m_onewire{(uint8_t)m_thermocouplepin}, m_thermocouple{&m_onewire} {}
+  Thermocouple(int pin, const String& name, const String& shortname) :
+   m_thermocouplepin {pin},
+   m_sensor_name { name },
+   m_sensor_short_name { shortname },
+   m_error{0} ,
+   m_current_temp{0.0},
+   m_onewire{(uint8_t)m_thermocouplepin},
+   m_thermocouple{&m_onewire} {}
   
   
   void init_thermocouple();
