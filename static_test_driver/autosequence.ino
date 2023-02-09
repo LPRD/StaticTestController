@@ -49,7 +49,8 @@
   #define COOL_DOWN_LED_PERIOD      10000       // 1 minute
 #endif
 
-const char *states[8] = {"STAND_BY",
+const char *states[8] = {
+  "STAND_BY",
   "TERMINAL_COUNT",
   "PRESTAGE_READY",
   "PRESTAGE",
@@ -201,14 +202,22 @@ void run_control(){
           abort_autosequence();
         }else
       #endif
-      if (outlet_temp >= MAX_COOLANT_TEMP){
+      //Check outlet temperature
+      //TODO: Should this be a function call instead of a parameter reference?
+      //TODO: Also, rename the thermocouples.
+      if (thermocouple_2.m_current_temp >= MAX_COOLANT_TEMP){
         Serial.println(F("Temperature reached critical level. Shuttung down."));
         abort_autosequence();
       }
-      else if (run_time >= THRUST_CHECK_TIME && force < MIN_THRUST){
-        Serial.println(F("Thrust below critical level. Shutting down."));
-        abort_autosequence();
-      }
+      else{ 
+        // Force will be the sum of the four loadcells for the purpose of error checking
+        float force = (loadcell_1.m_current_force + loadcell_2.m_current_force +
+                         loadcell_3.m_current_force + loadcell_4.m_current_force);
+        if (run_time >= THRUST_CHECK_TIME && force < MIN_THRUST){
+          Serial.println(F("Thrust below critical level. Shutting down."));
+          abort_autosequence();
+        }
+      }  
 
       if (run_time >= RUN_TIME){
         set_state(OXYGEN_SHUTDOWN, &state);
