@@ -17,9 +17,12 @@
 #define FORCE_MAX_VALID 500
 
 #if CONFIGURATION == MK_2
-#define LOAD_CELL_CALIBRATION_FACTOR 20400.0 //This value is obtained using the SparkFun_HX711_Calibration sketch
+#define LOAD_CELL_1_CALIBRATION_FACTOR 4750
+#define LOAD_CELL_2_CALIBRATION_FACTOR 4760
+#define LOAD_CELL_3_CALIBRATION_FACTOR 4690
+#define LOAD_CELL_4_CALIBRATION_FACTOR 4650
 #else
-#define LOAD_CELL_CALIBRATION_FACTOR 20400
+#define LOAD_CELL_CALIBRATION_FACTOR 20400//This value is obtained using the SparkFun_HX711_Calibration sketch
 #endif
 
 #define LOAD_CELL_RETRY_INTERVAL 10
@@ -69,12 +72,12 @@ int temp_error[NUMBER_OF_TEMP_SENSORS] = { 0,0 };
 
 // Load cell setup
 #define LOAD_CELL_1_DOUT 11
-#define LOAD_CELL_1_CLK 7
 #define LOAD_CELL_2_DOUT 10
-#define LOAD_CELL_2_CLK 6
 #define LOAD_CELL_3_DOUT 9
-#define LOAD_CELL_3_CLK 5
 #define LOAD_CELL_4_DOUT 8
+#define LOAD_CELL_1_CLK 7
+#define LOAD_CELL_2_CLK 6
+#define LOAD_CELL_3_CLK 5
 #define LOAD_CELL_4_CLK 4
 
 //thermocouple 
@@ -92,7 +95,7 @@ typedef enum{
   COOL_DOWN
 }state_t;
 
-//Yikes
+
 void init_autosequence();
 
 //CLASS DECLARATIONS 
@@ -121,7 +124,7 @@ class LoadCell
   float m_current_force;
 
   LoadCell(){}
-  LoadCell(uint8_t dout, uint8_t clk) : m_calibrationFactor{LOAD_CELL_CALIBRATION_FACTOR} , m_dout {dout} , m_clk {clk}, m_error{0}, m_current_force{0} {}
+  LoadCell(uint8_t dout, uint8_t clk, double cal) : m_calibrationFactor{cal} , m_dout {dout} , m_clk {clk}, m_error{0}, m_current_force{0} {}
 
   float read_force();
   void init_loadcell();
@@ -150,7 +153,7 @@ class Thermocouple
 
   float m_current_temp;
 
-  //I am avoiding to initialize the onjects here, one wire etc, in case brace init doesnt work later on in the code 
+  //I am avoiding to initialize the objects here, one wire etc, in case brace init doesnt work later on in the code 
   
   Thermocouple(int pin, const String& name, const String& shortname) :
    m_thermocouplepin {pin},

@@ -21,12 +21,12 @@ PressureTransducer pressure_fuel_injector{PRESSURE_FUEL_INJECTOR, "injector fuel
 PressureTransducer pressure_ox_injector{PRESSURE_OX_INJECTOR, "injector oxygen", "OxE"};
 
 bool global_pressure_zero_ready = false;
-//declare load cells
 
-LoadCell loadcell_1{LOAD_CELL_1_DOUT, LOAD_CELL_1_CLK};
-LoadCell loadcell_2{LOAD_CELL_2_DOUT, LOAD_CELL_2_CLK};
-LoadCell loadcell_3{LOAD_CELL_3_DOUT, LOAD_CELL_3_CLK};
-LoadCell loadcell_4{LOAD_CELL_4_DOUT, LOAD_CELL_4_CLK};
+//declare load cells
+LoadCell loadcell_1{LOAD_CELL_1_DOUT, LOAD_CELL_1_CLK, LOAD_CELL_1_CALIBRATION_FACTOR};
+LoadCell loadcell_2{LOAD_CELL_2_DOUT, LOAD_CELL_2_CLK, LOAD_CELL_2_CALIBRATION_FACTOR};
+LoadCell loadcell_3{LOAD_CELL_3_DOUT, LOAD_CELL_3_CLK, LOAD_CELL_3_CALIBRATION_FACTOR};
+LoadCell loadcell_4{LOAD_CELL_4_DOUT, LOAD_CELL_4_CLK, LOAD_CELL_4_CALIBRATION_FACTOR};
 
 
 // LCD
@@ -60,28 +60,28 @@ void (*reset)(void) = 0;
 
 void setup() {
     // Initialize serial
-    while (!Serial);
+    // while (!Serial);
     Serial.begin(115200);
     Serial.println(F("Mk 2 static test driver"));
     Serial.println(F("Initializing..."));
     delay(500); // wait for chips to stabilize
 
-    //init forces and pressure
+    //init pressure
     pressure_fuel.init_transducer();
     pressure_ox.init_transducer();
     pressure_fuel_injector.init_transducer();
     pressure_ox_injector.init_transducer();
 
+    //init forces
     loadcell_1.init_loadcell();
     loadcell_2.init_loadcell();
     loadcell_3.init_loadcell();
     loadcell_4.init_loadcell();
-   
-    //thermocouples
 
+    //thermocouples
     thermocouple_1.init_thermocouple();
     thermocouple_2.init_thermocouple();
-   
+
     //init all valves
     valve_fuel_pre.init_valve();
     valve_fuel_main.init_valve();
@@ -93,10 +93,11 @@ void setup() {
     // Set initial state
     init_autosequence();
 
-    Serial.println("Setup Complete");
+    Serial.println(F("Setup Complete"));
 }
 
 void loop() {
+      delay(1000);
     // Grab force data
     loadcell_1.updateForces();
     loadcell_2.updateForces();
