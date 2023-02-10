@@ -81,8 +81,8 @@ int temp_error[NUMBER_OF_TEMP_SENSORS] = { 0,0 };
 #define LOAD_CELL_4_CLK 4
 
 //thermocouple 
-#define THERMOCOUPLE_PIN_1 45 //PLACEHOLDER
-#define THERMOCOUPLE_PIN_2 46 //PLACEHOLDER
+#define THERMOCOUPLE_PIN_1 2 //PLACEHOLDER
+#define THERMOCOUPLE_PIN_2 3 //PLACEHOLDER
 
 typedef enum{
   STAND_BY,
@@ -142,27 +142,25 @@ class LoadCell
 class Thermocouple 
 {
   private:
-  DallasTemperature m_thermocouple;
-  DeviceAddress m_address;
-  OneWire m_onewire;
+    DallasTemperature m_thermocouple;
+    DeviceAddress m_address;
+    OneWire m_onewire;
   public:
-  int m_thermocouplepin;
-  int m_error;
-  const String m_sensor_name;
-  const String m_sensor_short_name;
+    int m_error;
+    const String m_sensor_name;
+    const String m_sensor_short_name;
 
-  float m_current_temp;
+    float m_current_temp;
 
   //I am avoiding to initialize the objects here, one wire etc, in case brace init doesnt work later on in the code 
   
   Thermocouple(int pin, const String& name, const String& shortname) :
-   m_thermocouplepin {pin},
-   m_sensor_name { name },
-   m_sensor_short_name { shortname },
-   m_error{0} ,
-   m_current_temp{0.0},
-   m_onewire{(uint8_t)m_thermocouplepin},
-   m_thermocouple{&m_onewire} {}
+   m_sensor_name ( name ),
+   m_sensor_short_name ( shortname ),
+   m_error(0) ,
+   m_current_temp(0.0),
+   m_onewire((uint8_t)pin),
+   m_thermocouple(&m_onewire) {}
   
   
   void init_thermocouple();

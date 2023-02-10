@@ -35,8 +35,8 @@ Adafruit_LiquidCrystal lcd(0);
 
 
 //declare thermocouples 
-Thermocouple thermocouple_1{THERMOCOUPLE_PIN_1, "temperature", "temp"};
-Thermocouple thermocouple_2{THERMOCOUPLE_PIN_2, "temperature", "temp"};
+Thermocouple thermocouple_1(THERMOCOUPLE_PIN_1, "Inlet", "In");
+Thermocouple thermocouple_2(THERMOCOUPLE_PIN_2, "Outlet", "Out");
 
 
 bool sensor_status = true;
