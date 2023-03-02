@@ -5,7 +5,7 @@
 #include <Adafruit_MMA8451.h>
 #include <Adafruit_MAX31855.h>
 #include <Adafruit_Sensor.h>
-#include <Adafruit_LiquidCrystal.h>
+// #include <Adafruit_LiquidCrystal.h>
 #include <Telemetry.h>
 #include <avr/pgmspace.h>
 
@@ -16,22 +16,22 @@
 
 //declare pressure transducers
 PressureTransducer pressure_fuel{PRESSURE_FUEL, "fuel", "Fl"};
-PressureTransducer pressure_ox{PRESSURE_OX, "oxygen", "ox"};
+PressureTransducer pressure_ox{PRESSURE_OX, "oxygen", "Ox"};
 PressureTransducer pressure_fuel_injector{PRESSURE_FUEL_INJECTOR, "injector fuel", "FlE"};
 PressureTransducer pressure_ox_injector{PRESSURE_OX_INJECTOR, "injector oxygen", "OxE"};
 
 bool global_pressure_zero_ready = false;
 
 //declare load cells
-LoadCell loadcell_1{LOAD_CELL_1_DOUT, LOAD_CELL_1_CLK, LOAD_CELL_1_CALIBRATION_FACTOR};
-LoadCell loadcell_2{LOAD_CELL_2_DOUT, LOAD_CELL_2_CLK, LOAD_CELL_2_CALIBRATION_FACTOR};
-LoadCell loadcell_3{LOAD_CELL_3_DOUT, LOAD_CELL_3_CLK, LOAD_CELL_3_CALIBRATION_FACTOR};
-LoadCell loadcell_4{LOAD_CELL_4_DOUT, LOAD_CELL_4_CLK, LOAD_CELL_4_CALIBRATION_FACTOR};
+LoadCell loadcell_1{LOAD_CELL_1_DOUT, LOAD_CELL_1_CLK, LOAD_CELL_1_CALIBRATION_FACTOR, "LoadCell1", "LC1"};
+LoadCell loadcell_2{LOAD_CELL_2_DOUT, LOAD_CELL_2_CLK, LOAD_CELL_2_CALIBRATION_FACTOR, "LoadCell2", "LC2"};
+LoadCell loadcell_3{LOAD_CELL_3_DOUT, LOAD_CELL_3_CLK, LOAD_CELL_3_CALIBRATION_FACTOR, "LoadCell3", "LC3"};
+LoadCell loadcell_4{LOAD_CELL_4_DOUT, LOAD_CELL_4_CLK, LOAD_CELL_4_CALIBRATION_FACTOR, "LoadCell4", "LC4"};
 
 
 // LCD
 // Connect via i2c, default address #0 (A0-A2 not jumpered)
-Adafruit_LiquidCrystal lcd(0);
+// Adafruit_LiquidCrystal lcd(0);
 
 
 //declare thermocouples 
@@ -42,12 +42,12 @@ Thermocouple thermocouple_2(THERMOCOUPLE_PIN_2, "Outlet", "Out");
 bool sensor_status = true;
 
 //declare all valves
-Valve valve_fuel_pre{FUEL_PRE_PIN, "fuel pre", "FlPre"};
-Valve valve_fuel_main{FUEL_MAIN_PIN, "fuel main", "FlMain"};
-Valve valve_ox_pre{OX_PRE_PIN, "oxygen pre", "OxPre"};
-Valve valve_ox_main{OX_MAIN_PIN, "oxygen main", "OxMain"};
-Valve valve_n2_choke{N2_CHOKE_PIN, "n2 choke", "N2Pre"};
-Valve valve_n2_drain{N2_DRAIN_PIN, "n2 drain", "N2Main"};
+Valve valve_fuel_pre{FUEL_PRE_PIN, "fuel pre", "fuel_pre_setting"};
+Valve valve_fuel_main{FUEL_MAIN_PIN, "fuel main", "fuel_main_setting"};
+Valve valve_ox_pre{OX_PRE_PIN, "oxygen pre", "ox_pre_setting"};
+Valve valve_ox_main{OX_MAIN_PIN, "oxygen main", "ox_main_setting"};
+Valve valve_n2_choke{N2_CHOKE_PIN, "n2 choke", "nitro_fill_setting"};
+Valve valve_n2_drain{N2_DRAIN_PIN, "n2 drain", "nitro_drain_setting"};
 
 unsigned long last_heartbeat = 0;
 
@@ -97,7 +97,6 @@ void setup() {
 }
 
 void loop() {
-      delay(1000);
     // Grab force data
     loadcell_1.updateForces();
     loadcell_2.updateForces();
@@ -195,10 +194,10 @@ void loop() {
     READ_FIELD(ox_main_command, "%d", valve_command) {
         valve_ox_main.set_valve(valve_command);
     }
-    READ_FIELD(nitro_fill_setting, "%d", valve_command) {
+    READ_FIELD(nitro_fill_command, "%d", valve_command) {
         valve_n2_choke.set_valve(valve_command);
     }
-    READ_FIELD(nitro_drain_setting, "%d", valve_command) {
+    READ_FIELD(nitro_drain_command, "%d", valve_command) {
         valve_n2_drain.set_valve(valve_command);
     }
     READ_DEFAULT(data_name, data) {

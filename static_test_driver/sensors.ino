@@ -27,7 +27,7 @@ void error_check(int &error, bool working, const String &sensor_type, const Stri
     if (sensor_errors.length()) { 
       sensor_errors += ',';
     }
-    sensor_errors += sensor_type.substring(0, min(sensor_type.length(), 2)) + sensor_short_name;
+    sensor_errors += sensor_type.substring(0, min(sensor_type.length(), 4)) + sensor_short_name;
     if (!error) { 
       Serial.print(sensor_name);    
       if (sensor_name.length()) {
@@ -85,7 +85,8 @@ float LoadCell::read_force() {
   if (is_ready) {
     result = m_scale.get_units();
   }
-  error_check(m_error, is_ready && !isnan(result) && result > FORCE_MIN_VALID && result < FORCE_MAX_VALID, "Force");
+  error_check(m_error, is_ready && !isnan(result) && result > FORCE_MIN_VALID && result < FORCE_MAX_VALID,
+   "Force", m_sensor_name, m_sensor_short_name);
   return result;
 }
 
@@ -100,7 +101,7 @@ float Thermocouple::read_temp() {
   m_thermocouple.requestTemperatures();
   
   float result = m_thermocouple.getTempC(m_address);
-  error_check(m_error, result > TEMP_MIN_VALID && result < TEMP_MAX_VALID, "temp", m_sensor_name, m_sensor_short_name);
+  error_check(m_error, result > TEMP_MIN_VALID && result < TEMP_MAX_VALID, "Temp", m_sensor_name, m_sensor_short_name);
   return result;
 }
 

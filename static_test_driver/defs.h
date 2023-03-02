@@ -118,13 +118,23 @@ class LoadCell
   uint8_t m_dout; //Digital out pin
   uint8_t m_clk;  //Clock pin
   double m_calibrationFactor;
+  const String m_sensor_name;
+  const String m_sensor_short_name;
+
 
   int m_error;
 
   float m_current_force;
 
   LoadCell(){}
-  LoadCell(uint8_t dout, uint8_t clk, double cal) : m_calibrationFactor{cal} , m_dout {dout} , m_clk {clk}, m_error{0}, m_current_force{0} {}
+  LoadCell(uint8_t dout, uint8_t clk, double cal, const String& name, const String& shortname):
+   m_calibrationFactor{cal},
+   m_dout {dout},
+   m_clk {clk},
+   m_error{0},
+   m_current_force{0},
+   m_sensor_name ( name ),
+   m_sensor_short_name ( shortname ) {}
 
   float read_force();
   void init_loadcell();
