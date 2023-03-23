@@ -182,3 +182,25 @@ sensors_vec_t read_accelerometer(Adafruit_MMA8451 &mma, int &error) {
   error_check(error, !(mma.x == -1 && mma.y == -1 && mma.z == -1), "accelerometer");
   return accel;
 }
+
+//-------------------------------------------------------------------------------------------
+//Ignition Arm Servo
+//-------------------------------------------------------------------------------------------
+
+//Sensor Device 5
+
+void ServoArm::retract()
+{
+    
+    servo.write(90);                  // sets the servo position according to the scaled value
+    servo.write(175);                  // sets the servo position according to the scaled value
+    servo.write(165);                  // sets the servo position according to the scaled value
+
+}
+
+void ServoArm::extend()
+{
+
+    servo.write(0);                  // sets the servo position according to the scaled value
+
+}

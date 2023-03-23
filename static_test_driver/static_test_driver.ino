@@ -49,6 +49,10 @@ Valve valve_ox_main{OX_MAIN_PIN, "oxygen main", "ox_main_setting"};
 Valve valve_n2_choke{N2_CHOKE_PIN, "n2 choke", "nitro_fill_setting"};
 Valve valve_n2_drain{N2_DRAIN_PIN, "n2 drain", "nitro_drain_setting"};
 
+
+//declare servo for the ignition arm
+ServoArm servo_arm(SERVO_PIN)
+
 unsigned long last_heartbeat = 0;
 
 // Generally-used variables for parsing commands

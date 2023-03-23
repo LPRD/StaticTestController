@@ -11,6 +11,8 @@
 #define OX_LEADTIME        500            // Delay between closing oxygen prestage valve and closing fuel prestage valve (0.5 seconds)
 #define PRE_LEADTIME       1000           // Delay between closing oxygen prestage valve and closing both mainstage valves (1 second)
 #define HEARTBEAT_TIMEOUT  1000           // Timeout to abort run after not recieving heartbeat signal (1 second)
+#define IGNTION_TIME       2000           // Time between pre-valves opening and retraction  of the ignition arm  
+#define RETRACTION_TIME    1000           // Time allotted for the ignition arm to retract - the main valves should open following this time
 
 #if CONFIGURATION == MK_2_FULL
   #define COUNTDOWN_DURATION  60000       // 1 minute

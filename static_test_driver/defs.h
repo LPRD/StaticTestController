@@ -37,12 +37,14 @@
 //  IGNITER DEFINES
 
 #define IGNITER_PIN 15
+#define SERVO_PIN 1
 
 #if CONFIGURATION == DEMO
 #define IGNITER_DURATION 5000
 #else
 #define IGNITER_DURATION 500
 #endif
+
 
 
 //IGNITER DEFINES END 
@@ -228,6 +230,22 @@ public:
   void set_valve(bool setting);
 };
 
+class ServoArm
+{
+  private:
+  Servo servo;
+  
+  public:  
+  ServoArm(int pin):servo(){
+
+    servo.attach(pin);
+
+  }
+
+
+  }
+  
+};
 
 
 
