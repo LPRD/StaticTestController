@@ -20,7 +20,7 @@ PressureTransducer pressure_ox{PRESSURE_OX, "oxygen", "Ox"};
 PressureTransducer pressure_fuel_injector{PRESSURE_FUEL_INJECTOR, "injector fuel", "FlE"};
 PressureTransducer pressure_ox_injector{PRESSURE_OX_INJECTOR, "injector oxygen", "OxE"};
 
-bool global_pressure_zero_ready = false;
+// bool global_pressure_zero_ready = false;
 
 //declare load cells
 LoadCell loadcell_1{LOAD_CELL_1_DOUT, LOAD_CELL_1_CLK, LOAD_CELL_1_CALIBRATION_FACTOR, "LoadCell1", "LC1"};
@@ -35,19 +35,18 @@ LoadCell loadcell_4{LOAD_CELL_4_DOUT, LOAD_CELL_4_CLK, LOAD_CELL_4_CALIBRATION_F
 
 
 //declare thermocouples 
-Thermocouple thermocouple_1(THERMOCOUPLE_PIN_1, "Inlet", "In");
+Thermocouple thermocouple_1(THERMOCOUPLE_PIN_1, "Inlet",  "In");
 Thermocouple thermocouple_2(THERMOCOUPLE_PIN_2, "Outlet", "Out");
 
+//declare all valves
+Valve valve_fuel_pre {FUEL_PRE_PIN,  "fuel pre",    "fuel_pre_setting"};
+Valve valve_fuel_main{FUEL_MAIN_PIN, "fuel main",   "fuel_main_setting"};
+Valve valve_ox_pre   {OX_PRE_PIN,    "oxygen pre",  "ox_pre_setting"};
+Valve valve_ox_main  {OX_MAIN_PIN,   "oxygen main", "ox_main_setting"};
+Valve valve_n2_choke {N2_CHOKE_PIN,  "n2 choke",    "nitro_fill_setting"};
+Valve valve_n2_drain {N2_DRAIN_PIN,  "n2 drain",    "nitro_drain_setting"};
 
 bool sensor_status = true;
-
-//declare all valves
-Valve valve_fuel_pre{FUEL_PRE_PIN, "fuel pre", "fuel_pre_setting"};
-Valve valve_fuel_main{FUEL_MAIN_PIN, "fuel main", "fuel_main_setting"};
-Valve valve_ox_pre{OX_PRE_PIN, "oxygen pre", "ox_pre_setting"};
-Valve valve_ox_main{OX_MAIN_PIN, "oxygen main", "ox_main_setting"};
-Valve valve_n2_choke{N2_CHOKE_PIN, "n2 choke", "nitro_fill_setting"};
-Valve valve_n2_drain{N2_DRAIN_PIN, "n2 drain", "nitro_drain_setting"};
 
 unsigned long last_heartbeat = 0;
 
@@ -56,11 +55,12 @@ char data[10] = "";
 char data_name[20] = "";
 
 // Calling this performs a software reset of the board, reinitializing sensors
+// (intentionally raises an exception)
 void (*reset)(void) = 0;
 
 void setup() {
     // Initialize serial
-    // while (!Serial);
+    while (!Serial); //Waits for a serial port to be opened
     Serial.begin(115200);
     Serial.println(F("Mk 2 static test driver"));
     Serial.println(F("Initializing..."));
@@ -114,7 +114,7 @@ void loop() {
     thermocouple_2.updateTemps();
 
    
-    // Update sensor diagnostic message on LCD
+    // Send sensor diagnostic message to GUI
     update_sensor_errors();
 
     // Run autonomous control
@@ -128,19 +128,19 @@ void loop() {
         SEND_ITEM(force3, loadcell_3.m_current_force)
         SEND_ITEM(force4, loadcell_4.m_current_force)
         
-        SEND_ITEM(outlet_temp, thermocouple_1.m_current_temp)
-        SEND_ITEM(inlet_temp, thermocouple_2.m_current_temp)
+        SEND_ITEM(inlet_temp, thermocouple_1.m_current_temp)
+        SEND_ITEM(outlet_temp, thermocouple_2.m_current_temp)
         
         SEND_ITEM(fuel_press, pressure_fuel.m_current_pressure)
         SEND_ITEM(ox_press, pressure_ox.m_current_pressure)
         SEND_ITEM(fuel_inj_press, pressure_fuel_injector.m_current_pressure)
         SEND_ITEM(ox_inj_press, pressure_ox_injector.m_current_pressure)
         
-    SEND_ITEM(sensor_status, sensor_status)
-        END_SEND
+        SEND_ITEM(sensor_status, sensor_status)
+    END_SEND
 
-        // Read a command
-        bool valve_command;
+    // Read a command
+    bool valve_command;
 
     BEGIN_READ
         READ_FLAG(zero_force) {

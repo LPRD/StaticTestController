@@ -5,8 +5,8 @@
 
 #define SENSOR_ERROR_LIMIT 5 // Max number of errors in a row before deciding a sensor is faulty
 
-#define PRESSURE_CALIBRATION_FACTOR 246.58
-#define PRESSURE_OFFSET 118.33
+// #define PRESSURE_CALIBRATION_FACTOR 246.58
+// #define PRESSURE_OFFSET 118.33
 #define PRESSURE_MIN_VALID -100
 #define PRESSURE_MAX_VALID 1000
 
@@ -49,10 +49,10 @@
 
 //STATIC TEST DRIVER DEFINES BEGIN 
 
-#define INLET_TEMP A5
-#define OUTLET_TEMP A4
-#define NUMBER_OF_TEMP_SENSORS 4
-int temp_error[NUMBER_OF_TEMP_SENSORS] = { 0,0 };
+// #define INLET_TEMP A5
+// #define OUTLET_TEMP A4
+// #define NUMBER_OF_TEMP_SENSORS 4
+// int temp_error[NUMBER_OF_TEMP_SENSORS] = { 0,0 };
 
 #define PRESSURE_FUEL A0
 #define PRESSURE_OX A1
@@ -81,8 +81,8 @@ int temp_error[NUMBER_OF_TEMP_SENSORS] = { 0,0 };
 #define LOAD_CELL_4_CLK 4
 
 //thermocouple 
-#define THERMOCOUPLE_PIN_1 2 //PLACEHOLDER
-#define THERMOCOUPLE_PIN_2 3 //PLACEHOLDER
+#define THERMOCOUPLE_PIN_1 2
+#define THERMOCOUPLE_PIN_2 3
 
 typedef enum{
   STAND_BY,

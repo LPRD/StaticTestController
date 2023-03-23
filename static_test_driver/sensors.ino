@@ -14,9 +14,9 @@ String sensor_errors = "";
 
 
 void update_sensor_errors() {
- // set_lcd_errors(sensor_errors);
- //print sensor errors
- Serial.println(sensor_errors);
+  // set_lcd_errors(sensor_errors);
+  //print sensor errors
+  Serial.println(sensor_errors);
   sensor_errors = "";
 }
 
@@ -40,8 +40,6 @@ void error_check(int &error, bool working, const String &sensor_type, const Stri
     if (error > SENSOR_ERROR_LIMIT) {     
       sensor_status = false; //static_test_driver
     }
-
-   
   }
 }
 
@@ -136,14 +134,14 @@ void PressureTransducer::init_transducer()
 }
 
 float PressureTransducer::read_pressure() {
-  float result = (analogRead(m_pressurepin) * 5 / 1024.0) * PRESSURE_CALIBRATION_FACTOR - PRESSURE_OFFSET;
+  float result = (analogRead(m_pressurepin) * 5 / 1024.0);// * PRESSURE_CALIBRATION_FACTOR - PRESSURE_OFFSET;
   error_check(m_error, result > PRESSURE_MIN_VALID && result < PRESSURE_MAX_VALID, m_sensor_name, "pressure");
   return result;
 }
 
 void PressureTransducer::updatePressures()
 {
-   m_current_pressure = read_pressure();
+    m_current_pressure = read_pressure();
 
     if(m_current_hist_val >= PRESSURE_NUM_HIST_VALS)
     {
@@ -153,7 +151,7 @@ void PressureTransducer::updatePressures()
     
     m_pressure_history[m_current_hist_val] = m_current_pressure;
     m_current_pressure -= m_tare;
-      m_current_hist_val++;
+    m_current_hist_val++;
 }
 
 

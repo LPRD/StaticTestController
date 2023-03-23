@@ -34,7 +34,7 @@
 #elseif CONFIGURATION == MK_2_LOW
   #define MIN_THRUST  100                 // Min thrust that must be reached to avoid triggering a no-ignition shutdown (100 Newtons)
 #else
-  #define MIN_THRUST  50
+  #define MIN_THRUST  -10
 #endif
 
 //***LED's***//
@@ -60,13 +60,9 @@ const char *states[8] = {
   "COOL_DOWN"
 };
 
-void write_state(const char *state_name){
-  SEND(status, state_name);
-}
-
 void set_state(state_t state, state_t * state_var) {
   *state_var = state;
-  write_state(states[state]);
+  SEND(status, states[state]);
 }
 
 long start_time     = 0;
