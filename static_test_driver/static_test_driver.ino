@@ -8,6 +8,8 @@
 // #include <Adafruit_LiquidCrystal.h>
 #include <Telemetry.h>
 #include <avr/pgmspace.h>
+#include <Servo.h>
+
 
 #include <OneWire.h>
 #include <DallasTemperature.h>

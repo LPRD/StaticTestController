@@ -37,7 +37,7 @@
 //  IGNITER DEFINES
 
 #define IGNITER_PIN 15
-#define SERVO_PIN 1
+#define SERVO_PIN 13
 
 #if CONFIGURATION == DEMO
 #define IGNITER_DURATION 5000
@@ -239,9 +239,6 @@ class ServoArm
   ServoArm(int pin):servo(){
 
     servo.attach(pin);
-
-  }
-
 
   }
   

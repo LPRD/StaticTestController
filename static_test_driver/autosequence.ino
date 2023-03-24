@@ -4,15 +4,16 @@
 
 #define CONFIGURATION MK_2_LOW
 
+//BELOW VALUES ARE DEFINED FROM END OF COUNTDOWN
 #define PRESTAGE_PREP_TIME 0              // Time at which to open the prestage valves
-#define PRESTAGE_TIME      0
-#define MAINSTAGE_TIME     0
-#define THRUST_CHECK_TIME  2000           // Time at which to start measuring engine output thrust (2 seconds)
+#define PRESTAGE_TIME      2000           // Time at which the ignitor fires - make sure this is right
+#define RETRACTION_TIME    4000           // Time at which the ignitor arm retracts, concluding ignition time - make sure this is right
+#define MAINSTAGE_TIME     5000           // Time at which the main valves open - make sure this is right
+#define THRUST_CHECK_TIME  6500           // Time at which to start measuring engine output thrust (2 seconds)
+// BELOW VALUES ARE DEFINED FROM SHUTDOWN
 #define OX_LEADTIME        500            // Delay between closing oxygen prestage valve and closing fuel prestage valve (0.5 seconds)
 #define PRE_LEADTIME       1000           // Delay between closing oxygen prestage valve and closing both mainstage valves (1 second)
 #define HEARTBEAT_TIMEOUT  1000           // Timeout to abort run after not recieving heartbeat signal (1 second)
-#define IGNTION_TIME       2000           // Time between pre-valves opening and retraction  of the ignition arm  
-#define RETRACTION_TIME    1000           // Time allotted for the ignition arm to retract - the main valves should open following this time
 
 #if CONFIGURATION == MK_2_FULL
   #define COUNTDOWN_DURATION  60000       // 1 minute
@@ -51,11 +52,12 @@
   #define COOL_DOWN_LED_PERIOD      10000       // 1 minute
 #endif
 
-const char *states[8] = {
+const char *states[9] = {
   "STAND_BY",
   "TERMINAL_COUNT",
   "PRESTAGE_READY",
   "PRESTAGE",
+  "RETRACTION",
   "MAINSTAGE",
   "OXYGEN_SHUTDOWN",
   "SHUTDOWN",
@@ -79,7 +81,6 @@ void blink(int led, long period){
 
 void heartbeat(){
   heartbeat_time = millis();
-}
 
 void init_autosequence(){
   set_state(STAND_BY, &state);
@@ -113,6 +114,9 @@ void abort_autosequence(){
   Serial.println(F("run aborted"));
   switch (state){
     case STAND_BY:
+      servo_arm.extend();
+      break;
+      
     case TERMINAL_COUNT:
       set_state(STAND_BY, &state);
       break;
@@ -175,6 +179,7 @@ void run_control(){
         valve_n2_choke.set_valve(1);
         valve_ox_pre.set_valve(1);
         set_state(PRESTAGE_READY, &state);
+        
       }
       break;
 
@@ -185,7 +190,22 @@ void run_control(){
       }
       break;
 
+//    case PRESTAGE:
+//      if (run_time >= MAINSTAGE_TIME){
+//        valve_fuel_main.set_valve(1);
+//        valve_ox_main.set_valve(1);
+//        set_state(MAINSTAGE, &state);
+//      }
+//      break;
+
     case PRESTAGE:
+      if (run_time >= RETRACTION_TIME){
+        sensor_arm.retract();
+        set_state(RETRACTION, &state);
+      }
+      break;
+
+     case RETRACTION:
       if (run_time >= MAINSTAGE_TIME){
         valve_fuel_main.set_valve(1);
         valve_ox_main.set_valve(1);
