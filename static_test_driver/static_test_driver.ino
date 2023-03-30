@@ -9,8 +9,6 @@
 #include <Telemetry.h>
 #include <avr/pgmspace.h>
 #include <Servo.h>
-
-
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
