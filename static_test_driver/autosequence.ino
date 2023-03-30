@@ -81,6 +81,7 @@ void blink(int led, long period){
 
 void heartbeat(){
   heartbeat_time = millis();
+}
 
 void init_autosequence(){
   set_state(STAND_BY, &state);
@@ -200,7 +201,7 @@ void run_control(){
 
     case PRESTAGE:
       if (run_time >= RETRACTION_TIME){
-        sensor_arm.retract();
+        servo_arm.retract();
         set_state(RETRACTION, &state);
       }
       break;

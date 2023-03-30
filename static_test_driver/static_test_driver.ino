@@ -51,7 +51,7 @@ Valve valve_n2_drain{N2_DRAIN_PIN, "n2 drain", "nitro_drain_setting"};
 
 
 //declare servo for the ignition arm
-ServoArm servo_arm(SERVO_PIN)
+ServoArm servo_arm(SERVO_PIN);
 
 unsigned long last_heartbeat = 0;
 

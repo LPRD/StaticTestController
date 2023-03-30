@@ -91,6 +91,7 @@ typedef enum{
   TERMINAL_COUNT,
   PRESTAGE_READY,
   PRESTAGE,
+  RETRACTION,
   MAINSTAGE,
   OXYGEN_SHUTDOWN,
   SHUTDOWN,
@@ -233,18 +234,15 @@ public:
 class ServoArm
 {
   private:
-  Servo servo;
+    Servo servo;
   
   public:  
-  ServoArm(int pin):servo(){
-
-    servo.attach(pin);
-
-  }
-  
+    ServoArm(int pin):servo(){
+      servo.attach(pin);
+    }
+    void extend();
+    void retract();
 };
-
-
 
 
 #endif 
