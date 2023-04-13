@@ -69,7 +69,7 @@
 #define FUEL_MAIN_PIN 33
 #define OX_PRE_PIN 32
 #define OX_MAIN_PIN 31
-#define N2_CHOKE_PIN 27
+#define N2_CHOKE_PIN 29
 #define N2_DRAIN_PIN 28
 
 // Load cell setup
@@ -233,13 +233,13 @@ public:
 
 class ServoArm
 {
-  private:
+  public:
     Servo servo;
-  
-  public:  
+    
     ServoArm(int pin):servo(){
       servo.attach(pin);
     }
+    
     void extend();
     void retract();
 };

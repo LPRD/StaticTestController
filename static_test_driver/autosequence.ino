@@ -115,7 +115,7 @@ void abort_autosequence(){
   Serial.println(F("run aborted"));
   switch (state){
     case STAND_BY:
-      servo_arm.extend();
+      servo_arm.retract();
       break;
       
     case TERMINAL_COUNT:
@@ -166,6 +166,10 @@ void run_control(){
       // if (!sensor_status){
       //   set_lcd_status("Sensor Failure");
       // }
+      if (servo_arm.servo.read() !=0) {
+        Serial.println(F("Servo not activated"));
+        abort_autosequence();
+      }
       break;
 
     case TERMINAL_COUNT:

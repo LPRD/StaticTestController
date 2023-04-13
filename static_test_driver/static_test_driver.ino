@@ -183,6 +183,9 @@ void loop() {
         Serial.println(F("Manual abort initiated"));
         abort_autosequence();
     }
+    READ_FLAG(extend_servo) {
+      servo_arm.extend();
+    }
     READ_FLAG(fire_igniter) {
         fire_igniter();
     }
