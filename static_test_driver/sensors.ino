@@ -159,6 +159,7 @@ void PressureTransducer::updatePressures()
 //Accelerometer
 //-------------------------------------------------------------------------------------------
 
+/*
 void init_accelerometer(Adafruit_MMA8451 &mma) {
   bool working = false;
   if (mma.begin()) {
@@ -180,4 +181,4 @@ sensors_vec_t read_accelerometer(Adafruit_MMA8451 &mma, int &error) {
   error_check(error, !(mma.x == -1 && mma.y == -1 && mma.z == -1), "accelerometer");
   return accel;
 }
-
+*/

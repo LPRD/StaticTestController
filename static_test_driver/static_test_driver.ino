@@ -1,16 +1,15 @@
-
-#include <SPI.h>
-#include <Wire.h>
-#include <HX711.h> // https://github.com/bogde/HX711
-#include <Adafruit_MMA8451.h>
-#include <Adafruit_MAX31855.h>
-#include <Adafruit_Sensor.h>
-// #include <Adafruit_LiquidCrystal.h>
 #include <Telemetry.h>
-#include <avr/pgmspace.h>
 #include <Servo.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include <HX711.h> // https://github.com/bogde/HX711
+// #include <Wire.h>
+// #include <Adafruit_MMA8451.h>
+// #include <Adafruit_MAX31855.h>
+// #include <Adafruit_Sensor.h>
+// #include <Adafruit_LiquidCrystal.h>
+// #include <avr/pgmspace.h>
+// #include <SPI.h>
 
 #include "defs.h"
 
