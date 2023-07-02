@@ -1,4 +1,7 @@
 #include <Telemetry.h>
+// #include <Servo.h>
+// #include <OneWire.h>
+// #include <DallasTemperature.h>
 
 #include "HX711.h"
 #include <string>
@@ -117,135 +120,8 @@ float mean(const float *data, unsigned int size) {
 }
 
 
-class LoadCell
-{
-  private:
-  HX711 m_scale;
-  u_int8_t m_dout; //Digital out pin
-  u_int8_t m_clk;  //Clock pin
-  double m_calibrationFactor;
-  const std::string m_sensor_name;
-  const std::string m_sensor_short_name;
-
-  public:
-  int m_error;
-
-  float m_current_force;
-
-  LoadCell(){}
-  LoadCell(u_int8_t dout, u_int8_t clk, double cal, const std::string& name, const std::string& shortname):
-   m_calibrationFactor{cal},
-   m_dout {dout},
-   m_clk {clk},
-   m_error{0},
-   m_current_force{0},
-   m_sensor_name ( name ),
-   m_sensor_short_name ( shortname ) {}
-
-  float read_force();
-  void init_loadcell();
-
-  void updateForces() {
-    m_current_force = read_force();
-  }
-
-  void zeroForces(){
-    m_scale.tare();
-  }
-};
 
 
-class Thermocouple 
-{
-  private:
-    DallasTemperature m_thermocouple;
-    DeviceAddress m_address;
-    OneWire m_onewire;
-  public:
-    int m_error;
-    const std::string m_sensor_name;
-    const std::string m_sensor_short_name;
-
-    float m_current_temp;
-
-  //I am avoiding to initialize the objects here, one wire etc, in case brace init doesnt work later on in the code 
-  
-  Thermocouple(int pin, const std::string& name, const std::string& shortname) :
-   m_sensor_name ( name ),
-   m_sensor_short_name ( shortname ),
-   m_error(0) ,
-   m_current_temp(0.0),
-   m_onewire((u_int8_t)pin),
-   m_thermocouple(&m_onewire) {}
-  
-  
-  void init_thermocouple();
-  float read_temp();
-
-  void updateTemps() {
-    m_current_temp = read_temp();
-  }
-
-};
-
-
-class PressureTransducer
-{
-  private:
-  int m_current_hist_val;
-  float m_pressure_history[PRESSURE_NUM_HIST_VALS];
-  
-  public:
-  bool m_zero_ready;
-  int m_pressurepin;
-  int m_error;
-  const std::string m_sensor_name;
-  const std::string m_sensor_short_name;
-
-  float m_tare;
-
-  float m_current_pressure;
-  
-  PressureTransducer(int pin, const std::string& name, const std::string& shortname) : m_pressurepin{pin}, m_sensor_name{name}, m_sensor_short_name{shortname} , m_error{0}, m_tare{0}, m_pressure_history{}, m_current_hist_val{0}, m_zero_ready{false} {} 
-
-  void init_transducer();
-  float read_pressure();
-
-  void updatePressures();
-
-  void zeroPressures(){
-      m_tare = mean(&m_pressure_history[0], PRESSURE_NUM_HIST_VALS);
-  }
-  
-};
-
-
-class Valve
-{
-public:
-  u_int8_t m_valvepin;
-  std::string m_valvename;
-  std::string m_telemetry_id;
-  bool m_current_state;
-
-  Valve(u_int8_t pin, const std::string& name, const std::string& telemetry) : m_valvepin{pin}, m_valvename{name}, m_telemetry_id{telemetry}, m_current_state{false} {}
-
-  void init_valve();
-  void set_valve(bool setting);
-};
-
-class ServoArm
-{
-  public:
-    Servo servo;
-    
-    ServoArm(int pin):servo(){
-      servo.attach(pin);
-    }
-    
-    void extend();
-    void retract();
-};
 
 
 #endif 

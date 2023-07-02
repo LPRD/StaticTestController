@@ -1,17 +1,3 @@
-
-// #include <SPI.h>
-// #include <Wire.h>
-// #include <HX711.h> // https://github.com/bogde/HX711
-// #include <Adafruit_MMA8451.h>
-// #include <Adafruit_MAX31855.h>
-// #include <Adafruit_Sensor.h>
-// #include <Adafruit_LiquidCrystal.h>
-// #include <Telemetry.h>
-// #include <avr/pgmspace.h>
-// #include <Servo.h>
-// #include <OneWire.h>
-// #include <DallasTemperature.h>
-
 #include "defs.h"
 
 //declare pressure transducers
@@ -27,11 +13,6 @@ LoadCell loadcell_1{LOAD_CELL_1_DOUT, LOAD_CELL_1_CLK, LOAD_CELL_1_CALIBRATION_F
 LoadCell loadcell_2{LOAD_CELL_2_DOUT, LOAD_CELL_2_CLK, LOAD_CELL_2_CALIBRATION_FACTOR, "LoadCell2", "LC2"};
 LoadCell loadcell_3{LOAD_CELL_3_DOUT, LOAD_CELL_3_CLK, LOAD_CELL_3_CALIBRATION_FACTOR, "LoadCell3", "LC3"};
 LoadCell loadcell_4{LOAD_CELL_4_DOUT, LOAD_CELL_4_CLK, LOAD_CELL_4_CALIBRATION_FACTOR, "LoadCell4", "LC4"};
-
-
-// LCD
-// Connect via i2c, default address #0 (A0-A2 not jumpered)
-// Adafruit_LiquidCrystal lcd(0);
 
 
 //declare thermocouples 
