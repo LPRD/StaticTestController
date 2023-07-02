@@ -6,7 +6,7 @@ class Igniter
     int pin;
 
  public:
-    Igniter(int pin){};
+    Igniter(int pin);
 
     void Igniter::handle_igniter ();
 

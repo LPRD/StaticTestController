@@ -109,19 +109,4 @@ typedef enum{
 
 void init_autosequence();
 
-//CLASS DECLARATIONS 
-
- 
-float mean(const float *data, unsigned int size) {
-  float result = 0;
-  for (unsigned int i = 0; i < size; i++)
-      result += data[i];
-  return result / size;
-}
-
-
-
-
-
-
 #endif 

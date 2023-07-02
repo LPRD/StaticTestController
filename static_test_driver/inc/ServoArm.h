@@ -4,8 +4,7 @@ class ServoArm
     Servo servo;
     
  public:
-    ServoArm(int pin):servo() {
-    }
+    ServoArm(int pin):servo() {}
     
     void extend();
 
