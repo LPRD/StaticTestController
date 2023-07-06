@@ -2,8 +2,8 @@ class Igniter
 {
  private:
     long ignition_time;
-    bool ignitor_active;
-    int pin;
+    struct gpiod_chip *chip;
+	struct gpiod_line *line;
 
  public:
     Igniter(int pin);

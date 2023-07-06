@@ -3,15 +3,17 @@
 class Valve
 {
  private:
-    int m_valvepin;
     std::string m_valvename;
     std::string m_telemetry_id;
     bool m_current_state;
 
- public:
-    Valve(int pin, const std::string& name, const std::string& telemetry) {};
+    struct gpiod_chip *chip;
+    struct gpiod_line *line;
 
-    void init_valve();
+ public:
+    Valve(int pin, const std::string& name, const std::string& telemetry);
+
+    ~Valve();
 
     void set_valve(bool setting);
 };
