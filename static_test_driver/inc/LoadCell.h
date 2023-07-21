@@ -1,6 +1,12 @@
 #include <string>
 #include <HX711.h>
 
+#define LOAD_CELL_RETRY_INTERVAL 10
+#define LOAD_CELL_MAX_RETRIES 20
+
+#define FORCE_MIN_VALID -50
+#define FORCE_MAX_VALID 500
+
 class LoadCell
 {
  private:

@@ -15,10 +15,6 @@
 #ifndef DEFINITIONS
 #define DEFINITIONS
 
-// SENSOR DEFINES
-
-#define SENSOR_ERROR_LIMIT 5 // Max number of errors in a row before deciding a sensor is faulty
-
 // #define PRESSURE_CALIBRATION_FACTOR 246.58
 // #define PRESSURE_OFFSET 118.33
 #define PRESSURE_MIN_VALID -100
@@ -26,9 +22,6 @@
 
 #define TEMP_MIN_VALID -10
 #define TEMP_MAX_VALID 120
-
-#define FORCE_MIN_VALID -50
-#define FORCE_MAX_VALID 500
 
 #if CONFIGURATION == MK_2
 #define LOAD_CELL_1_CALIBRATION_FACTOR  
@@ -38,9 +31,6 @@
 #else
 #define LOAD_CELL_CALIBRATION_FACTOR 20400//This value is obtained using the SparkFun_HX711_Calibration sketch
 #endif
-
-#define LOAD_CELL_RETRY_INTERVAL 10
-#define LOAD_CELL_MAX_RETRIES 20
 
 
 // SENSOR DEFINES END 

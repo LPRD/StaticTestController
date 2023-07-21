@@ -1,11 +1,13 @@
+#include <unistd.h>
+#include <math.h>
 #include "LoadCell.h"
 
-LoadCell::LoadCell(u_int8_t dout, u_int8_t clk, double cal, const std::string& name, const std::string& shortname){
+LoadCell::LoadCell(u_int8_t dout, u_int8_t clk, double cal, const std::string& name, const std::string& shortname):
+        m_sensor_name(name),
+        m_sensor_short_name(shortname) {
     m_dout = dout;
     m_clk = clk;
     m_calibrationFactor = cal;
-    m_sensor_name = name;
-    m_sensor_short_name = shortname;
     m_error = 0;
     m_current_force = 0;
 }
@@ -22,9 +24,9 @@ void LoadCell::init_loadcell() {
     read_force();
     
     if (!m_error) {
-        Serial.println(F("Load cell amp connected"));
+        // Serial.println(F("Load cell amp connected"));
     }
-    delay(100);
+    usleep(100000);
 }
 
 
@@ -32,20 +34,20 @@ float LoadCell::read_force() {
     // Wait for load cell data to become ready
     bool is_ready = false;
     for (unsigned int i = 0; i < LOAD_CELL_MAX_RETRIES; i++) {
-    if (m_scale.is_ready()) {
-        is_ready = true;
-        break;
-    }
-    delay(LOAD_CELL_RETRY_INTERVAL);
+        if (m_scale.is_ready()) {
+            is_ready = true;
+            break;
+        }
+        usleep(LOAD_CELL_RETRY_INTERVAL*1000);
     }
 
     // Read a value from the load cell
     float result = 0;
     if (is_ready) {
-    result = m_scale.get_units();
+        result = m_scale.get_units();
     }
     error_check(m_error, is_ready && !isnan(result) && result > FORCE_MIN_VALID && result < FORCE_MAX_VALID,
-    "Force", m_sensor_name, m_sensor_short_name);
+    "   Force", m_sensor_name, m_sensor_short_name);
     return result;
 }
 

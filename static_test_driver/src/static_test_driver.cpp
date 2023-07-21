@@ -21,6 +21,7 @@ Thermocouple thermocouple_2(THERMOCOUPLE_PIN_2, "Outlet", "Out");
 
 
 bool sensor_status = true;
+String sensor_errors = "";
 
 //declare all valves
 Valve valve_fuel_pre{FUEL_PRE_PIN, "fuel pre", "fuel_pre_setting"};
@@ -317,14 +318,14 @@ void loop() {
     thermocouple_2.updateTemps();
 
    
-    // Update sensor diagnostic message on LCD
-    update_sensor_errors();
+    // Update sensor diagnostic message on GUI
+    Serial.println(sensor_errors);
+    sensor_errors = "";
 
     // Run autonomous control
     run_control();
 
     // Send collected data
-  
     BEGIN_SEND
         SEND_ITEM(force1, loadcell_1.m_current_force)
         SEND_ITEM(force2, loadcell_2.m_current_force)
