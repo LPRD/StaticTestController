@@ -9,7 +9,6 @@ class PressureTransducer
     float m_pressure_history[PRESSURE_NUM_HIST_VALS];
     bool m_zero_ready;
     int m_pressurepin;
-    int m_error;
     const std::string m_sensor_name;
     const std::string m_sensor_short_name;
     float m_tare;

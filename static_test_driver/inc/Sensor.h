@@ -4,9 +4,14 @@
 
 class Sensor {
  private:
-    bool& sensor_status;
-    String& sensor_errors;
+    int num_errors = 0;
+    bool& sensors_ok;
+    std::string& error_msg;
+    std::string sensor_name;
+    std::string sensor_shortname;
 
  protected:
-    void error_check(int &error, bool working, const String &sensor_type, const String &sensor_name="", const String &sensor_short_name="");
+    Sensor(bool&, std::string&, std::string, std::string);
+    void error_check(bool working, const std::string &sensor_type);
+
 };

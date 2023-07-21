@@ -1,25 +1,32 @@
 // #include "defs.h"
 #include "Sensor.h"
 
-    void Sensor::error_check(int &error, bool working, const String &sensor_type, const String &sensor_name="", const String &sensor_short_name="") {
-        if (working) {
-            error = 0;
-        } else {
-            if (sensor_errors.length()) { 
-                sensor_errors += ',';
+
+Sensor::Sensor(bool& sensors_ok, std::string& error_msg, std::string sensor_name, std::string sensor_shortname) :
+        sensors_ok(sensors_ok), error_msg(error_msg) {
+    this->sensor_name = sensor_name;
+    this->sensor_shortname = sensor_shortname;
+}
+
+void Sensor::error_check(bool working, const std::string &sensor_type) {
+    if (working) {
+        num_errors = 0;
+    } else {
+        if (error_msg.length() != 0) { 
+            error_msg += ',';
+        }
+        error_msg += sensor_type.substr(0, 4) + sensor_shortname;
+        if (num_errors > 0) { 
+            // Serial.print(sensor_name);    
+            if (sensor_name.length()) {
+                // Serial.print(' ');
             }
-            sensor_errors += sensor_type.substring(0, min(sensor_type.length(), 4)) + sensor_short_name;
-            if (!error) { 
-                Serial.print(sensor_name);    
-                if (sensor_name.length()) {
-                    Serial.print(' ');
-                }
-                Serial.print(sensor_type);
-                Serial.println(F(" sensor error"));
-            }
-            error++;
-            if (error > SENSOR_ERROR_LIMIT) {     
-                sensor_status = false; //static_test_driver
-            }
+            // Serial.print(sensor_type);
+            // Serial.println(F(" sensor error"));
+        }
+        num_errors++;
+        if (num_errors > SENSOR_ERROR_LIMIT) {     
+            sensors_ok = false; //static_test_driver
         }
     }
+}

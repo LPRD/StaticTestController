@@ -11,7 +11,6 @@ PressureTransducer::PressureTransducer(int pin, const std::string& name, const s
     m_pressurepin = pin;
     m_sensor_name = name;
     m_sensor_short_name = name;
-    m_error = 0;
     m_tare = 0;
     m_pressure_history = {0};
     m_current_hist_val = 0;
@@ -25,7 +24,7 @@ void PressureTransducer::init_transducer()
 
 float PressureTransducer::read_pressure() {
     float result = (analogRead(m_pressurepin) * 5 / 1024.0);// * PRESSURE_CALIBRATION_FACTOR - PRESSURE_OFFSET;
-    error_check(m_error, result > PRESSURE_MIN_VALID && result < PRESSURE_MAX_VALID, m_sensor_name, "pressure");
+    error_check(result > PRESSURE_MIN_VALID && result < PRESSURE_MAX_VALID, m_sensor_name, "pressure");
     return result;
 }
 

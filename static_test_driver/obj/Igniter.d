@@ -1,3 +1,3 @@
-obj/Igniter.o: src/Igniter.cpp inc/Igniter.h
-src/Igniter.cpp:
+obj/igniter.o: src/igniter.cpp inc/Igniter.h
+src/igniter.cpp:
 inc/Igniter.h:

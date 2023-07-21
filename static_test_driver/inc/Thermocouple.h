@@ -10,7 +10,6 @@ class Thermocouple
     DeviceAddress m_address;
     OneWire m_onewire;
   public:
-    int m_error;
     const std::string m_sensor_name;
     const std::string m_sensor_short_name;
 

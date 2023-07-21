@@ -16,7 +16,6 @@ class LoadCell
     double m_calibrationFactor;
     const std::string m_sensor_name;
     const std::string m_sensor_short_name;
-    int m_error;
     float m_current_force;
 
  public:

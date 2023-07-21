@@ -3,7 +3,6 @@
 Thermocouple::Thermocouple(int pin, const std::string& name, const std::string& shortname) {
     m_sensor_name = name;
     m_sensor_short_name = shortname;
-    m_error = 0;
     m_current_temp = 0.0;
 }
 
@@ -11,7 +10,7 @@ float Thermocouple::read_temp() {
     m_thermocouple.requestTemperatures();
 
     float result = m_thermocouple.getTempC(m_address);
-    error_check(m_error, result > TEMP_MIN_VALID && result < TEMP_MAX_VALID, "Temp", m_sensor_name, m_sensor_short_name);
+    error_check(result > TEMP_MIN_VALID && result < TEMP_MAX_VALID, "Temp", m_sensor_name, m_sensor_short_name);
     return result;
 }
 
