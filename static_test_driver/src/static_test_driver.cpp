@@ -1,5 +1,8 @@
 #include "defs.h"
 
+bool sensors_ok = true;
+std::string error_msg = "";
+
 //declare pressure transducers
 PressureTransducer pressure_fuel{PRESSURE_FUEL, "fuel", "Fl"};
 PressureTransducer pressure_ox{PRESSURE_OX, "oxygen", "Ox"};
@@ -9,19 +12,16 @@ PressureTransducer pressure_ox_injector{PRESSURE_OX_INJECTOR, "injector oxygen",
 bool global_pressure_zero_ready = false;
 
 //declare load cells
-LoadCell loadcell_1{LOAD_CELL_1_DOUT, LOAD_CELL_1_CLK, LOAD_CELL_1_CALIBRATION_FACTOR, "LoadCell1", "LC1"};
-LoadCell loadcell_2{LOAD_CELL_2_DOUT, LOAD_CELL_2_CLK, LOAD_CELL_2_CALIBRATION_FACTOR, "LoadCell2", "LC2"};
-LoadCell loadcell_3{LOAD_CELL_3_DOUT, LOAD_CELL_3_CLK, LOAD_CELL_3_CALIBRATION_FACTOR, "LoadCell3", "LC3"};
-LoadCell loadcell_4{LOAD_CELL_4_DOUT, LOAD_CELL_4_CLK, LOAD_CELL_4_CALIBRATION_FACTOR, "LoadCell4", "LC4"};
+LoadCell loadcell_1(LOAD_CELL_1_DOUT, LOAD_CELL_1_CLK, LOAD_CELL_1_CALIBRATION_FACTOR, 1, sensors_ok, error_msg);
+LoadCell loadcell_2(LOAD_CELL_2_DOUT, LOAD_CELL_2_CLK, LOAD_CELL_2_CALIBRATION_FACTOR, 2, sensors_ok, error_msg);
+LoadCell loadcell_3(LOAD_CELL_3_DOUT, LOAD_CELL_3_CLK, LOAD_CELL_3_CALIBRATION_FACTOR, 3, sensors_ok, error_msg);
+LoadCell loadcell_4(LOAD_CELL_4_DOUT, LOAD_CELL_4_CLK, LOAD_CELL_4_CALIBRATION_FACTOR, 4, sensors_ok, error_msg);
 
 
 //declare thermocouples 
 Thermocouple thermocouple_1(THERMOCOUPLE_PIN_1, "Inlet", "In");
 Thermocouple thermocouple_2(THERMOCOUPLE_PIN_2, "Outlet", "Out");
 
-
-bool sensor_status = true;
-String sensor_errors = "";
 
 //declare all valves
 Valve valve_fuel_pre{FUEL_PRE_PIN, "fuel pre", "fuel_pre_setting"};
@@ -70,7 +70,7 @@ void init_autosequence(){
 
 void start_countdown(){
   #if CONFIGURATION != DEMO
-    if (sensor_status == false){
+    if (sensors_ok == false){
       Serial.println(F("Countdown aborted due to sensor failure"));
       set_state(STAND_BY, &state);
     }else
@@ -144,7 +144,7 @@ void run_control(){
 
   switch (state){
     case STAND_BY:
-      // if (!sensor_status){
+      // if (!sensors_ok){
       //   set_lcd_status("Sensor Failure");
       // }
       if (servo_arm.servo.read() !=0) {
@@ -155,7 +155,7 @@ void run_control(){
 
     case TERMINAL_COUNT:
       #if CONFIGURATION != DEMO
-        if (!sensor_status){
+        if (!sensors_ok){
           Serial.println(F("Sensor failure"));
           abort_autosequence();
         }else
@@ -201,7 +201,7 @@ void run_control(){
 
     case MAINSTAGE:
       #if CONFIGURATION != DEMO
-        if (!sensor_status){
+        if (!sensors_ok){
           Serial.println(F("Sensor Failure"));
           abort_autosequence();
         }else
@@ -319,8 +319,8 @@ void loop() {
 
    
     // Update sensor diagnostic message on GUI
-    Serial.println(sensor_errors);
-    sensor_errors = "";
+    Serial.println(error_msg);
+    error_msg = "";
 
     // Run autonomous control
     run_control();
@@ -340,7 +340,7 @@ void loop() {
         SEND_ITEM(fuel_inj_press, pressure_fuel_injector.m_current_pressure)
         SEND_ITEM(ox_inj_press, pressure_ox_injector.m_current_pressure)
         
-    SEND_ITEM(sensor_status, sensor_status)
+    SEND_ITEM(sensors_ok, sensors_ok)
         END_SEND
 
         // Read a command

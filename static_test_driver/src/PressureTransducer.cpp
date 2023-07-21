@@ -7,12 +7,10 @@ float mean(const float *data, unsigned int size) {
   return result / size;
 }
 
-PressureTransducer::PressureTransducer(int pin, const std::string& name, const std::string& shortname) {
+PressureTransducer::PressureTransducer(int pin, std::string name, std::string shortname, bool& sensors_ok, std::string&error_msg) :
+        Sensor(sensors_ok, error_msg, name, shortname) {
     m_pressurepin = pin;
-    m_sensor_name = name;
-    m_sensor_short_name = name;
     m_tare = 0;
-    m_pressure_history = {0};
     m_current_hist_val = 0;
     m_zero_ready = 0;
 }
@@ -23,8 +21,8 @@ void PressureTransducer::init_transducer()
 }
 
 float PressureTransducer::read_pressure() {
-    float result = (analogRead(m_pressurepin) * 5 / 1024.0);// * PRESSURE_CALIBRATION_FACTOR - PRESSURE_OFFSET;
-    error_check(result > PRESSURE_MIN_VALID && result < PRESSURE_MAX_VALID, m_sensor_name, "pressure");
+    float result = (analogRead(m_pressurepin) * 1.8 / 4096.0);// * PRESSURE_CALIBRATION_FACTOR - PRESSURE_OFFSET;
+    error_check(result > PRESSURE_MIN_VALID && result < PRESSURE_MAX_VALID, "pressure");
     return result;
 }
 
