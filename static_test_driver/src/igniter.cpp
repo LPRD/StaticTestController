@@ -1,5 +1,6 @@
-#include "Igniter.h"
+#include <stdio.h>
 #include "gpiod.h"
+#include "Igniter.h"
 
 Igniter::Igniter(int pin){
     ignition_time = 0.0;
@@ -30,19 +31,19 @@ Igniter::~Igniter() {
 }
 
 void Igniter::fire_igniter() {
-    Serial.println("Firing igniter");
+    // Serial.println("Firing igniter");
     gpiod_line_set_value(line, 1);
-    ignition_time = millis();
+    // ignition_time = millis();
 }
 
 void Igniter::reset_igniter() {
-    Serial.println("Reset igniter");
+    // Serial.println("Reset igniter");
     gpiod_line_set_value(line, 0);
     ignition_time = 0;
 }
 
 void Igniter::handle_igniter() {
-    if (ignition_time != 0 && millis() > ignition_time + IGNITER_DURATION) {
+    if (ignition_time != 0 /* && millis() > ignition_time + IGNITER_DURATION */) {
         reset_igniter();
     }
 }

@@ -1,5 +1,7 @@
 #include <string>
 
+#define PRESSURE_NUM_HIST_VALS 10
+
 class PressureTransducer
 {
  private:

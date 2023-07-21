@@ -8,9 +8,11 @@ class Igniter
  public:
     Igniter(int pin);
 
-    void Igniter::handle_igniter ();
+    ~Igniter();
 
-    void Igniter::reset_igniter (); 
+    void handle_igniter ();
 
-    void Igniter::fire_igniter ();
+    void reset_igniter (); 
+
+    void fire_igniter ();
 };
