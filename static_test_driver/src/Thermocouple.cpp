@@ -1,4 +1,6 @@
 #include "Thermocouple.h"
+#include <iostream>
+#include <unistd.h>
 
 Thermocouple::Thermocouple(int pin, const std::string& name, const std::string& shortname) {
     m_sensor_name = name;
@@ -20,15 +22,13 @@ void Thermocouple::init_thermocouple()
 
     if(!m_thermocouple.getAddress(m_address, 0))
     {
-        Serial.print(m_sensor_name);
-        Serial.println("Thermocouple cannot be found");
+        std::cout << m_sensor_name << " cannot be found\n";
     }
     else{
-        Serial.print(m_sensor_name);
-        Serial.println(F(" theromocouple connected"));
+        std::cout << m_sensor_name << " connected\n";
         m_thermocouple.setResolution(9); //2 decimals 
     }
-    delay(100);
+    usleep(100000);
 }
 
 void Thermocouple::updateTemps() {

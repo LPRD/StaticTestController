@@ -35,9 +35,7 @@ Valve::~Valve() {
 // valve setting function
 void Valve::set_valve(bool setting) {
     m_current_state = setting;
-    Serial.print(m_valvename);
-    Serial.print(F(" to "));
-    Serial.println(m_current_state? F("open") : F("closed"));
+    print("%s to %s\n", m_valvename, m_current_state? "open" : "closed");
     SEND_NAME(m_telemetry_id, m_current_state);
 
     gpiod_line_set_value(line, m_current_state);

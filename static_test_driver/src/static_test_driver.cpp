@@ -1,4 +1,5 @@
 #include "defs.h"
+#include <iostream>
 
 bool sensors_ok = true;
 std::string error_msg = "";
@@ -44,6 +45,13 @@ char data_name[20] = "";
 // Calling this performs a software reset of the board, reinitializing sensors
 void (*reset)(void) = 0;
 
+// Function to replace Arduino.h millis()
+unsigned int millis () {
+  struct timeval t ;
+  gettimeofday ( & t , NULL ) ;
+  return t.tv_sec * 1000 + ( t.tv_usec + 500 ) / 1000 ;
+}
+
 // Autosequence Functions
 void set_state(state_t state, state_t * state_var) {
   *state_var = state;
@@ -71,7 +79,7 @@ void init_autosequence(){
 void start_countdown(){
   #if CONFIGURATION != DEMO
     if (sensors_ok == false){
-      Serial.println(F("Countdown aborted due to sensor failure"));
+      std::cout << "Countdown aborted due to sensor failure\n";
       set_state(STAND_BY, &state);
     }else
   #endif
@@ -81,11 +89,11 @@ void start_countdown(){
       valve_ox_main.m_current_state   ||
       valve_n2_choke.m_current_state  ||
       valve_n2_drain.m_current_state  ){
-        Serial.println(F("Countdown aborted due to unexpected initial valve state."));
+        std::cout << "Countdown aborted due to unexpected initial valve state.\n";
         set_state(STAND_BY, &state);
   }
   else{
-    Serial.println(F("Countdown has started"));
+    std::cout << "Countdown has started\n";
     set_state(TERMINAL_COUNT, &state);
     start_time = millis();
     heartbeat();
@@ -93,7 +101,7 @@ void start_countdown(){
 }
 
 void abort_autosequence(){
-  Serial.println(F("run aborted"));
+  std::cout << "run aborted\n";
   switch (state){
     case STAND_BY:
       servo_arm.retract();
@@ -137,7 +145,7 @@ void run_control(){
 
   #if CONFIGURATION == MK_2_FULL || CONFIGURATION == MK_2_LOW
     if (state!=STAND_BY  &&  state!=COOL_DOWN  &&  millis() > heartbeat_time + HEARTBEAT_TIMEOUT){
-      Serial.println(F("Loss of data link"));
+      std::cout << "Loss of data link\n";
       abort_autosequence();
     }else
   #endif
@@ -148,7 +156,7 @@ void run_control(){
       //   set_lcd_status("Sensor Failure");
       // }
       if (servo_arm.servo.read() !=0) {
-        Serial.println(F("Servo not activated"));
+        std::cout << "Servo not activated\n";
         abort_autosequence();
       }
       break;
@@ -156,7 +164,7 @@ void run_control(){
     case TERMINAL_COUNT:
       #if CONFIGURATION != DEMO
         if (!sensors_ok){
-          Serial.println(F("Sensor failure"));
+          std::cout << "Sensor failure\n";
           abort_autosequence();
         }else
       #endif
@@ -202,7 +210,7 @@ void run_control(){
     case MAINSTAGE:
       #if CONFIGURATION != DEMO
         if (!sensors_ok){
-          Serial.println(F("Sensor Failure"));
+          std::cout << "Sensor Failure\n";
           abort_autosequence();
         }else
       #endif
@@ -210,7 +218,7 @@ void run_control(){
       //TODO: Should this be a function call instead of a parameter reference?
       //TODO: Also, rename the thermocouples.
       if (thermocouple_2.m_current_temp >= MAX_COOLANT_TEMP){
-        Serial.println(F("Temperature reached critical level. Shuttung down."));
+        std::cout << "Temperature reached critical level. Shuttung down.\n";
         abort_autosequence();
       }
       else{ 
@@ -218,7 +226,7 @@ void run_control(){
         float force = (loadcell_1.m_current_force + loadcell_2.m_current_force +
                          loadcell_3.m_current_force + loadcell_4.m_current_force);
         if (run_time >= THRUST_CHECK_TIME && force < MIN_THRUST){
-          Serial.println(F("Thrust below critical level. Shutting down."));
+          std::cout << "Thrust below critical level. Shutting down.\n";
           abort_autosequence();
         }
       }  
@@ -252,7 +260,7 @@ void run_control(){
         valve_n2_drain.set_valve(1);
       }
       if (millis() - shutdown_time >= COOLDOWN_TIME){
-        Serial.println(F("Run finished"));
+        std::cout << "Run finished\n";
         valve_n2_drain.set_valve(0);
         set_state(STAND_BY, &state);
         start_time = 0;
@@ -265,9 +273,9 @@ void run_control(){
 void setup() {
     // Initialize serial
     // while (!Serial);
-    Serial.begin(115200);
-    Serial.println(F("Mk 2 static test driver"));
-    Serial.println(F("Initializing..."));
+    // Serial.begin(115200);
+    std::cout << "Mk 2 static test driver\n");
+    std::cout << "Initializing...\n";
     delay(500); // wait for chips to stabilize
 
     //init pressure
@@ -297,7 +305,7 @@ void setup() {
     // Set initial state
     init_autosequence();
 
-    Serial.println(F("Setup Complete"));
+    std::cout << "Setup Complete\n";
 }
 
 void loop() {
@@ -319,7 +327,7 @@ void loop() {
 
    
     // Update sensor diagnostic message on GUI
-    Serial.println(error_msg);
+    std::cout << error_msg << std::endl;
     error_msg = "";
 
     // Run autonomous control
@@ -348,7 +356,7 @@ void loop() {
 
     BEGIN_READ
         READ_FLAG(zero_force) {
-        Serial.println(F("Zeroing load cells"));
+        std::cout << "Zeroing load cells\n";
         loadcell_1.zeroForces(); 
         loadcell_2.zeroForces(); 
         loadcell_3.zeroForces(); 
@@ -357,15 +365,15 @@ void loop() {
 
     READ_FLAG(zero_pressure) {
         if (pressure_fuel.m_zero_ready || pressure_ox.m_zero_ready) {
-            Serial.println(F("Zeroing fuel pressure"));
+            std::cout << "Zeroing fuel pressure\n";
             pressure_fuel.zeroPressures();
             pressure_fuel.m_zero_ready = false;
-            Serial.println(F("Zeroing oxidizer pressure"));
+            std::cout << "Zeroing oxidizer pressure\n";
             pressure_ox.zeroPressures();
             pressure_ox.m_zero_ready = false;
         }
         else {
-            Serial.println(F("Pressure zero values not ready"));
+            std::cout << "Pressure zero values not ready\n";
         }
     }
 
@@ -373,14 +381,14 @@ void loop() {
         heartbeat();
     }
     READ_FLAG(reset) {
-        Serial.println(F("Resetting board"));
+        std::cout << "Resetting board\n";
         reset();
     }
     READ_FLAG(start) {
         start_countdown();
     }
     READ_FLAG(stop) {
-        Serial.println(F("Manual abort initiated"));
+        std::cout << "Manual abort initiated\n";
         abort_autosequence();
     }
     READ_FLAG(extend_servo) {
@@ -408,10 +416,7 @@ void loop() {
         valve_n2_drain.set_valve(valve_command);
     }
     READ_DEFAULT(data_name, data) {
-        Serial.print(F("Invalid data field recieved: "));
-        Serial.print(data_name);
-        Serial.print(":");
-        Serial.println(data);
+        std::cout << "Invalid data field recieved: " << data_name << ":" << data << std::endl;
     }
     END_READ
 }

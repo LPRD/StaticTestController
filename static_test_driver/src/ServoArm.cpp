@@ -1,4 +1,4 @@
-#include "Servo.h"
+#include "ServoArm.h"
 
 ServoArm::ServoArm(int pin){
     servo.attach(pin);

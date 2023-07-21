@@ -17,12 +17,7 @@ void Sensor::error_check(bool working, const std::string &sensor_type) {
         }
         error_msg += sensor_type.substr(0, 4) + sensor_shortname;
         if (num_errors > 0) { 
-            // Serial.print(sensor_name);    
-            if (sensor_name.length()) {
-                // Serial.print(' ');
-            }
-            // Serial.print(sensor_type);
-            // Serial.println(F(" sensor error"));
+            std::cout << sensor_name << " " << sensor_type <<" sensor error\n";
         }
         num_errors++;
         if (num_errors > SENSOR_ERROR_LIMIT) {     

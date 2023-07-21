@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <iostream>
 #include "gpiod.h"
 #include "Igniter.h"
 
@@ -31,13 +31,13 @@ Igniter::~Igniter() {
 }
 
 void Igniter::fire_igniter() {
-    // Serial.println("Firing igniter");
+    std::cout << "Firing igniter\n";
     gpiod_line_set_value(line, 1);
     // ignition_time = millis();
 }
 
 void Igniter::reset_igniter() {
-    // Serial.println("Reset igniter");
+    std::cout << "Reset igniter\n";
     gpiod_line_set_value(line, 0);
     ignition_time = 0;
 }

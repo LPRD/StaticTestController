@@ -17,8 +17,8 @@ DEPEXT      := d
 OBJEXT      := o
 
 #Flags, Libraries and Includes
-CFLAGS      := -fopenmp -Wall -O3 -g
-LIB         := -fopenmp -lm -larmadillo
+CFLAGS      :=  -Wall -O3 -g
+LIB         :=  
 INC         := -I$(INCDIR) -I/usr/local/include
 INCDEP      := -I$(INCDIR)
 

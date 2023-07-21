@@ -22,7 +22,7 @@ void LoadCell::init_loadcell() {
     read_force();
     
     // if (!m_error) {
-    //     Serial.println(F("Load cell amp connected"));
+    //     printf("Load cell amp connected\n");
     // }
     usleep(100000);
 }
