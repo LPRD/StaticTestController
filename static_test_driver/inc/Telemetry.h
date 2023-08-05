@@ -1,51 +1,85 @@
 // Contains defs for standard packet io protocol
 // To read floating point numbers, you need to change your arduino configuration settings
 
-// This just works, OK?
 
 #ifndef _TELEMETRY_H
 #define _TELEMETRY_H
 
-// #include "Arduino.h"
-// #include <avr/pgmspace.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
-// Defs for simulating C++ ostream
-/* template<class T>  */
-/* inline Print &operator <<(Print &stream, T arg)  */
-/* { stream.print(arg); return stream; } */
 
-/* enum _EndLineCode { endl }; */
+#define PORT 5000
+#define BUFFER_SIZE 1024
 
-/* inline Print &operator <<(Print &obj, _EndLineCode arg)  */
-/* { obj.println(); return obj; } */
+int client_fd = 0;
 
-#ifndef TELEMETRY_SERIAL
-#define TELEMETRY_SERIAL Serial
-#endif
+void wait_for_connection() {
+  int server_fd = 0;
+  struct sockaddr_in address;
+  int addrlen = sizeof(address);
+
+  // Create a TCP socket
+  if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+      perror("socket failed");
+      exit(EXIT_FAILURE);
+  }
+
+  address.sin_family = AF_INET;
+  address.sin_addr.s_addr = INADDR_ANY;
+  address.sin_port = htons(PORT);
+
+  // Bind the socket to the specified port
+  if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+      perror("bind failed");
+      exit(EXIT_FAILURE);
+  }
+
+  // Listen for incoming connections
+  if (listen(server_fd, 3) < 0) {
+      perror("listen");
+      exit(EXIT_FAILURE);
+  }
+
+  if ((client_fd = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
+      perror("accept");
+  } else {
+      // Set the new client socket to be non-blocking
+      if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0) {
+          perror("fcntl");
+          exit(EXIT_FAILURE);
+      }
+  }
+  }
 
 #define BEGIN_SEND {                            \
-  TELEMETRY_SERIAL.print(F("@@@@@_time:"));     \
-  TELEMETRY_SERIAL.print(millis());
+  char buffer[BUFFER_SIZE] = {0};               \
+  strcpy(buffer, "@@@@@_time:");                \
+  strcat(buffer, atoi(millis()));
   
 #define SEND_ITEM(field, value)                 \
-  TELEMETRY_SERIAL.print(F(";"));               \
-  TELEMETRY_SERIAL.print(F(#field));            \
-  TELEMETRY_SERIAL.print(F(":"));               \
-  TELEMETRY_SERIAL.print(value);
+  strcat(buffer, ";");                          \
+  strcat(buffer, #field);                       \
+  strcat(buffer, ":");                          \
+  strcat(buffer, atoi(value));
   
 #define SEND_GROUP_ITEM(value)                  \
-  TELEMETRY_SERIAL.print(F(","));               \
-  TELEMETRY_SERIAL.print(value);
+  strcat(buffer, ",");                          \
+  strcat(buffer, atoi(value));
   
 #define SEND_ITEM_NAME(field, value)            \
-  TELEMETRY_SERIAL.print(F(";"));               \
-  TELEMETRY_SERIAL.print(field);                \
-  TELEMETRY_SERIAL.print(F(":"));               \
-  TELEMETRY_SERIAL.print(value);
+  strcat(buffer, ";");                          \
+  strcat(buffer, field);                        \
+  strcat(buffer, ":");                          \
+  strcat(buffer, atoi(value));
 
 #define END_SEND                                \
-  TELEMETRY_SERIAL.println(F("&&&&&"));         \
-  TELEMETRY_SERIAL.flush();                     \
+  strcat(buffer, "&&&&&");                      \
+  write(client_fd, buffer, strlen(buffer));     \
   }
 
 #define SEND(field, value)                      \
@@ -58,40 +92,13 @@
   SEND_ITEM_NAME(field, value)                  \
     END_SEND
 
-#define READ_BUFFER_SIZE 50
-char _buffer[READ_BUFFER_SIZE];
-char _data[READ_BUFFER_SIZE - 10];
-
-#define CHECK_SERIAL_AVAIL                              \
-  if (!TELEMETRY_SERIAL.available()) {                  \
-    delay(100);                                         \
-    if (!TELEMETRY_SERIAL.available()) {                \
-      TELEMETRY_SERIAL.println(F("READ timeout"));      \
-      goto L_ENDREAD;                                   \
-    }                                                   \
-  }
-
 // Sorry about the gotos, only needed because macros.  
 #define BEGIN_READ                                                      \
-  if (TELEMETRY_SERIAL.available()) {                                   \
-    char _c = '\0';                                                     \
-    int _i;                                                             \
-    for (_i = 0; _c != '\n'; _i++) {                                    \
-      if (_i == READ_BUFFER_SIZE) {                                     \
-        TELEMETRY_SERIAL.println(F("READ buffer overflow"));            \
-        while (TELEMETRY_SERIAL.available() && TELEMETRY_SERIAL.read() != '\n') { \
-          CHECK_SERIAL_AVAIL;                                           \
-        }                                                               \
-        goto L_ENDREAD;                                                 \
-      }                                                                 \
-      CHECK_SERIAL_AVAIL;                                               \
-      _c = TELEMETRY_SERIAL.read();                                     \
-      _buffer[_i] = _c;                                                 \
-      if (_c == '\r') _i--;                                             \
-    }                                                                   \
-    _buffer[_i] = '\0';                                                 \
+  char _buffer[BUFFER_SIZE];                                            \
+  char _data[BUFFER_SIZE - 10];                                         \
+  if (read(client_fd, _buffer, BUFFER_SIZE) > 0) {                      \
     if (!sscanf(_buffer, "@@@@@%[^&]&&&&&", _data)) {                   \
-      TELEMETRY_SERIAL.println(F("READ packet error"));                 \
+      printf("READ packet error");                 \
       goto L_ENDREAD;                                                   \
     }                                                                   \
     if (0);

@@ -271,12 +271,12 @@ void run_control(){
 
 // Main code
 void setup() {
-    // Initialize serial
-    // while (!Serial);
-    // Serial.begin(115200);
-    std::cout << "Mk 2 static test driver\n");
+    // Initialize connection
+    std::cout << "LPRD static test driver\n";
+    std::cout << "Waiting for connection\n";
+    wait_for_connection();
+
     std::cout << "Initializing...\n";
-    delay(500); // wait for chips to stabilize
 
     //init pressure
     pressure_fuel.init_transducer();
@@ -348,14 +348,14 @@ void loop() {
         SEND_ITEM(fuel_inj_press, pressure_fuel_injector.m_current_pressure)
         SEND_ITEM(ox_inj_press, pressure_ox_injector.m_current_pressure)
         
-    SEND_ITEM(sensors_ok, sensors_ok)
-        END_SEND
+        SEND_ITEM(sensors_ok, sensors_ok)
+    END_SEND
 
-        // Read a command
-        bool valve_command;
+    // Read a command
+    bool valve_command;
 
     BEGIN_READ
-        READ_FLAG(zero_force) {
+    READ_FLAG(zero_force) {
         std::cout << "Zeroing load cells\n";
         loadcell_1.zeroForces(); 
         loadcell_2.zeroForces(); 
