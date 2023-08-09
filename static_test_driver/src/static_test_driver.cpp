@@ -1,14 +1,16 @@
 #include "defs.h"
+#include "Telemetry.h"
 #include <iostream>
+#include <sys/time.h>
 
 bool sensors_ok = true;
 std::string error_msg = "";
 
 //declare pressure transducers
-PressureTransducer pressure_fuel{PRESSURE_FUEL, "fuel", "Fl"};
-PressureTransducer pressure_ox{PRESSURE_OX, "oxygen", "Ox"};
-PressureTransducer pressure_fuel_injector{PRESSURE_FUEL_INJECTOR, "injector fuel", "FlE"};
-PressureTransducer pressure_ox_injector{PRESSURE_OX_INJECTOR, "injector oxygen", "OxE"};
+PressureTransducer pressure_fuel(PRESSURE_FUEL, "fuel", "Fl", sensors_ok, error_msg);
+PressureTransducer pressure_ox(PRESSURE_OX, "oxygen", "Ox", sensors_ok, error_msg);
+PressureTransducer pressure_fuel_injector(PRESSURE_FUEL_INJECTOR, "injector fuel", "FlE", sensors_ok, error_msg);
+PressureTransducer pressure_ox_injector(PRESSURE_OX_INJECTOR, "injector oxygen", "OxE", sensors_ok, error_msg);
 
 bool global_pressure_zero_ready = false;
 
@@ -36,6 +38,8 @@ Valve valve_n2_drain{N2_DRAIN_PIN, "n2 drain", "nitro_drain_setting"};
 //declare servo for the ignition arm
 ServoArm servo_arm(SERVO_PIN);
 
+Igniter igniter(IGNITER_PIN);
+
 unsigned long last_heartbeat = 0;
 
 // Generally-used variables for parsing commands
@@ -55,7 +59,7 @@ unsigned int millis () {
 // Autosequence Functions
 void set_state(state_t state, state_t * state_var) {
   *state_var = state;
-  SEND(status, states[state]);
+  SEND(status, states[state], "%s");
 }
 
 long start_time     = 0;
@@ -64,9 +68,9 @@ long heartbeat_time = 0;
 
 state_t state = STAND_BY;
 
-void blink(int led, long period){
-  digitalWrite(led, (int)((millis() % (period * 2)) / period));
-}
+// void blink(int led, long period){
+//   digitalWrite(led, (int)((millis() % (period * 2)) / period));
+// }
 
 void heartbeat(){
   heartbeat_time = millis();
@@ -122,7 +126,7 @@ void abort_autosequence(){
       valve_n2_choke.set_valve(0);
       valve_fuel_pre.set_valve(0);
       valve_ox_pre.set_valve(0);
-      reset_igniter();
+      igniter.reset_igniter();
       set_state(COOL_DOWN, &state);
       shutdown_time = millis();
       break;
@@ -139,9 +143,9 @@ void abort_autosequence(){
 
 void run_control(){
   long run_time = millis() - start_time - COUNTDOWN_DURATION;
-  SEND(run_time, run_time);
+  SEND(run_time, run_time, "%ld");
 
-  handle_igniter();
+  igniter.handle_igniter();
 
   #if CONFIGURATION == MK_2_FULL || CONFIGURATION == MK_2_LOW
     if (state!=STAND_BY  &&  state!=COOL_DOWN  &&  millis() > heartbeat_time + HEARTBEAT_TIMEOUT){
@@ -179,7 +183,7 @@ void run_control(){
 
     case PRESTAGE_READY:
       if (run_time >= PRESTAGE_TIME){
-        fire_igniter();
+        igniter.fire_igniter();
         set_state(PRESTAGE, &state);
       }
       break;
@@ -294,13 +298,13 @@ void setup() {
     thermocouple_1.init_thermocouple();
     thermocouple_2.init_thermocouple();
 
-    //init all valves
-    valve_fuel_pre.init_valve();
-    valve_fuel_main.init_valve();
-    valve_ox_pre.init_valve();
-    valve_ox_main.init_valve();
-    valve_n2_choke.init_valve();
-    valve_n2_drain.init_valve();
+    // //init all valves
+    // valve_fuel_pre.init_valve();
+    // valve_fuel_main.init_valve();
+    // valve_ox_pre.init_valve();
+    // valve_ox_main.init_valve();
+    // valve_n2_choke.init_valve();
+    // valve_n2_drain.init_valve();
 
     // Set initial state
     init_autosequence();
@@ -335,20 +339,20 @@ void loop() {
 
     // Send collected data
     BEGIN_SEND
-        SEND_ITEM(force1, loadcell_1.m_current_force)
-        SEND_ITEM(force2, loadcell_2.m_current_force)
-        SEND_ITEM(force3, loadcell_3.m_current_force)
-        SEND_ITEM(force4, loadcell_4.m_current_force)
+        SEND_ITEM(force1, loadcell_1.m_current_force, "%f")
+        SEND_ITEM(force2, loadcell_2.m_current_force, "%f")
+        SEND_ITEM(force3, loadcell_3.m_current_force, "%f")
+        SEND_ITEM(force4, loadcell_4.m_current_force, "%f")
         
-        SEND_ITEM(outlet_temp, thermocouple_1.m_current_temp)
-        SEND_ITEM(inlet_temp, thermocouple_2.m_current_temp)
+        SEND_ITEM(outlet_temp, thermocouple_1.m_current_temp, "%f")
+        SEND_ITEM(inlet_temp, thermocouple_2.m_current_temp, "%f")
         
-        SEND_ITEM(fuel_press, pressure_fuel.m_current_pressure)
-        SEND_ITEM(ox_press, pressure_ox.m_current_pressure)
-        SEND_ITEM(fuel_inj_press, pressure_fuel_injector.m_current_pressure)
-        SEND_ITEM(ox_inj_press, pressure_ox_injector.m_current_pressure)
+        SEND_ITEM(fuel_press, pressure_fuel.m_current_pressure, "%f")
+        SEND_ITEM(ox_press, pressure_ox.m_current_pressure, "%f")
+        SEND_ITEM(fuel_inj_press, pressure_fuel_injector.m_current_pressure, "%f")
+        SEND_ITEM(ox_inj_press, pressure_ox_injector.m_current_pressure, "%f")
         
-        SEND_ITEM(sensors_ok, sensors_ok)
+        SEND_ITEM(sensors_ok, sensors_ok, "%d")
     END_SEND
 
     // Read a command
@@ -395,7 +399,7 @@ void loop() {
       servo_arm.extend();
     }
     READ_FLAG(fire_igniter) {
-        fire_igniter();
+        igniter.fire_igniter();
     }
     READ_FIELD(fuel_pre_command, "%d", valve_command) {
        valve_fuel_pre.set_valve(valve_command);

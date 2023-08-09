@@ -10,13 +10,15 @@ class PressureTransducer : public Sensor
  private:
     int m_current_hist_val;
     float m_pressure_history[PRESSURE_NUM_HIST_VALS];
-    bool m_zero_ready;
     int m_pressurepin;
 
     float m_tare;
-    float m_current_pressure;
 
  public:
+     // TODO: Could these be private?
+     float m_current_pressure;    
+     bool m_zero_ready;
+
     PressureTransducer(int pin, std::string name, std::string shortname, bool& sensors_ok, std::string&error_msg);
 
     void init_transducer();

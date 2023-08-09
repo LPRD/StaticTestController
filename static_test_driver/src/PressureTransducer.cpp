@@ -17,13 +17,14 @@ PressureTransducer::PressureTransducer(int pin, std::string name, std::string sh
 
 void PressureTransducer::init_transducer()
 {
-    pinMode(m_pressurepin, INPUT);
+    // pinMode(m_pressurepin, INPUT);
 }
 
 float PressureTransducer::read_pressure() {
-    float result = (analogRead(m_pressurepin) * 1.8 / 4096.0);// * PRESSURE_CALIBRATION_FACTOR - PRESSURE_OFFSET;
-    error_check(result > PRESSURE_MIN_VALID && result < PRESSURE_MAX_VALID, "pressure");
-    return result;
+    // /sys/devices/platform/ocp/44e0d000.tscadc/TI-am335x-adc.0.auto/iio:device0/in_voltage0_raw
+    // float result = (analogRead(m_pressurepin) * 1.8 / 4096.0);// * PRESSURE_CALIBRATION_FACTOR - PRESSURE_OFFSET;
+    // error_check(result > PRESSURE_MIN_VALID && result < PRESSURE_MAX_VALID, "pressure");
+    // return result;
 }
 
 void PressureTransducer::updatePressures()

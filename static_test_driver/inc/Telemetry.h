@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
@@ -59,37 +60,37 @@ void wait_for_connection() {
 #define BEGIN_SEND {                            \
   char buffer[BUFFER_SIZE] = {0};               \
   strcpy(buffer, "@@@@@_time:");                \
-  strcat(buffer, atoi(millis()));
+  sprintf(buffer + strlen(buffer), "%d", millis());
   
-#define SEND_ITEM(field, value)                 \
+#define SEND_ITEM(field, value, format)         \
   strcat(buffer, ";");                          \
   strcat(buffer, #field);                       \
   strcat(buffer, ":");                          \
-  strcat(buffer, atoi(value));
+  sprintf(buffer + strlen(buffer), format, value);
   
-#define SEND_GROUP_ITEM(value)                  \
+#define SEND_GROUP_ITEM(value, format)          \
   strcat(buffer, ",");                          \
-  strcat(buffer, atoi(value));
+  sprintf(buffer + strlen(buffer), format, value);
   
-#define SEND_ITEM_NAME(field, value)            \
+#define SEND_ITEM_NAME(field, value, format)    \
   strcat(buffer, ";");                          \
   strcat(buffer, field);                        \
   strcat(buffer, ":");                          \
-  strcat(buffer, atoi(value));
+  sprintf(buffer + strlen(buffer), format, value);
 
 #define END_SEND                                \
   strcat(buffer, "&&&&&");                      \
   write(client_fd, buffer, strlen(buffer));     \
   }
 
-#define SEND(field, value)                      \
+#define SEND(field, value, format)              \
   BEGIN_SEND                                    \
-  SEND_ITEM(field, value)                       \
+  SEND_ITEM(field, value, format)               \
     END_SEND
 
-#define SEND_NAME(field, value)                 \
+#define SEND_NAME(field, value, format)         \
   BEGIN_SEND                                    \
-  SEND_ITEM_NAME(field, value)                  \
+  SEND_ITEM_NAME(field, value, format)          \
     END_SEND
 
 // Sorry about the gotos, only needed because macros.  

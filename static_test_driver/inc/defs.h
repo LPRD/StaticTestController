@@ -8,6 +8,7 @@
 #include "Thermocouple.h"
 #include "Valve.h"
 #include "ServoArm.h"
+#include "Igniter.h"
 
 #include "HX711.h"
 #include <string>
@@ -23,7 +24,7 @@
 #define TEMP_MAX_VALID 120
 
 #if CONFIGURATION == MK_2
-#define LOAD_CELL_1_CALIBRATION_FACTOR  
+#define LOAD_CELL_1_CALIBRATION_FACTOR 4700
 #define LOAD_CELL_2_CALIBRATION_FACTOR 4760
 #define LOAD_CELL_3_CALIBRATION_FACTOR 4690
 #define LOAD_CELL_4_CALIBRATION_FACTOR 4650
@@ -59,10 +60,10 @@
 // #define NUMBER_OF_TEMP_SENSORS 4
 // int temp_error[NUMBER_OF_TEMP_SENSORS] = { 0,0 };
 
-#define PRESSURE_FUEL A0
-#define PRESSURE_OX A1
-#define PRESSURE_FUEL_INJECTOR A2
-#define PRESSURE_OX_INJECTOR A3
+#define PRESSURE_FUEL 0//A0
+#define PRESSURE_OX 1//A1
+#define PRESSURE_FUEL_INJECTOR 2//A2
+#define PRESSURE_OX_INJECTOR 3//A3
 #define NUMBER_OF_PRESSURE_SENSORS 4
 
 

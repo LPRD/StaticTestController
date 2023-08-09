@@ -15,9 +15,10 @@ class LoadCell : public Sensor
     u_int8_t m_dout; //Digital out pin
     u_int8_t m_clk;  //Clock pin
     double m_calibrationFactor;
-    float m_current_force;
 
  public:
+    float m_current_force;
+
     LoadCell(u_int8_t dout, u_int8_t clk, double cal, int num, bool& sensors_ok, std::string& error_msg);
 
     void init_loadcell();

@@ -1,10 +1,10 @@
 class ServoArm
 {
  private:
-    Servo servo;
+   //  Servo servo;
     
  public:
-    ServoArm(int pin):servo() {}
+    ServoArm(int pin);
     
     void extend();
 

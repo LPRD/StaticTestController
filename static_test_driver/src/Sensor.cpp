@@ -1,5 +1,6 @@
 // #include "defs.h"
 #include "Sensor.h"
+#include <iostream>
 
 
 Sensor::Sensor(bool& sensors_ok, std::string& error_msg, std::string sensor_name, std::string sensor_shortname) :
