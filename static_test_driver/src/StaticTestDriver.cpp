@@ -282,12 +282,6 @@ void setup() {
 
     std::cout << "Initializing...\n";
 
-    //init pressure
-    pressure_fuel.init_transducer();
-    pressure_ox.init_transducer();
-    pressure_fuel_injector.init_transducer();
-    pressure_ox_injector.init_transducer();
-
     //init forces
     loadcell_1.init_loadcell();
     loadcell_2.init_loadcell();

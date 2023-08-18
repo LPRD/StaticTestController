@@ -44,10 +44,6 @@ PressureTransducer::PressureTransducer(int pin, std::string name, std::string sh
     m_zero_ready = 0;
 }
 
-void PressureTransducer::init_transducer()
-{
-    // pinMode(m_pressurepin, INPUT);
-}
 
 float PressureTransducer::read_pressure() {
     // /sys/devices/platform/ocp/44e0d000.tscadc/TI-am335x-adc.0.auto/iio:device0/in_voltage0_raw

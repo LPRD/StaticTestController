@@ -21,8 +21,6 @@ class PressureTransducer : public Sensor
 
     PressureTransducer(int pin, std::string name, std::string shortname, bool& sensors_ok, std::string&error_msg);
 
-    void init_transducer();
-
     float read_pressure();
 
     void updatePressures();
