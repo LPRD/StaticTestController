@@ -1,10 +1,39 @@
 #include "PressureTransducer.h"
+#include <fcntl.h>
+#include <unistd.h>
 
 float mean(const float *data, unsigned int size) {
   float result = 0;
   for (unsigned int i = 0; i < size; i++)
       result += data[i];
   return result / size;
+}
+
+int analogRead(int pin) {
+    // Check if pin is valid
+    if (pin < 0 || pin > 7) {
+        fprintf(stderr, "Analog pin out of range\n");
+        return -1;
+    }
+
+    // Build filename
+    char filename[100];
+    sprintf(filename, "/sys/devices/platform/ocp/44e0d000.tscadc/TI-am335x-adc.0.auto/iio:device0/in_voltage%d_raw", pin);
+    
+    // Open file
+    int fd = open(filename, O_EXCL);
+    if (fd == -1) {
+        perror("open");
+        return -1;
+    }
+
+    // Read file
+    int buffer;
+    if (read(fd, &buffer, 4) == -1) {
+        perror("read");
+        return -1;
+    }
+    return buffer;
 }
 
 PressureTransducer::PressureTransducer(int pin, std::string name, std::string shortname, bool& sensors_ok, std::string&error_msg) :
@@ -22,9 +51,9 @@ void PressureTransducer::init_transducer()
 
 float PressureTransducer::read_pressure() {
     // /sys/devices/platform/ocp/44e0d000.tscadc/TI-am335x-adc.0.auto/iio:device0/in_voltage0_raw
-    // float result = (analogRead(m_pressurepin) * 1.8 / 4096.0);// * PRESSURE_CALIBRATION_FACTOR - PRESSURE_OFFSET;
-    // error_check(result > PRESSURE_MIN_VALID && result < PRESSURE_MAX_VALID, "pressure");
-    // return result;
+    float result = (analogRead(m_pressurepin) * 1.8 / 4096.0);// * PRESSURE_CALIBRATION_FACTOR - PRESSURE_OFFSET;
+    error_check(result > PRESSURE_MIN_VALID && result < PRESSURE_MAX_VALID, "pressure");
+    return result;
 }
 
 void PressureTransducer::updatePressures()
