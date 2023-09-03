@@ -3,7 +3,9 @@
 #include "LoadCell.h"
 
 LoadCell::LoadCell(u_int8_t dout, u_int8_t clk, double cal, int num, bool& sensors_ok, std::string& error_msg):
-        Sensor(sensors_ok, error_msg, "LoadCell"+std::to_string(num), "LC"+std::to_string(num)) {
+        Sensor(sensors_ok, error_msg, "LoadCell"+std::to_string(num), "LC"+std::to_string(num)),
+        m_scale()
+{
     m_dout = dout;
     m_clk = clk;
     m_calibrationFactor = cal;

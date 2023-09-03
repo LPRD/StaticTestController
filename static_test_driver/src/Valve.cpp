@@ -1,5 +1,14 @@
 #include "Valve.h"
 #include <gpiod.h>
+#include <sys/time.h>
+
+
+unsigned int millis ();
+// {
+//   struct timeval t ;
+//   gettimeofday ( & t , NULL ) ;
+//   return t.tv_sec * 1000 + ( t.tv_usec + 500 ) / 1000 ;
+// }
 
 Valve::Valve(int pin, const std::string& name, const std::string& telemetry) {
     m_valvename = name;
@@ -35,8 +44,9 @@ Valve::~Valve() {
 // valve setting function
 void Valve::set_valve(bool setting) {
     m_current_state = setting;
-    print("%s to %s\n", m_valvename, m_current_state? "open" : "closed");
-    SEND_NAME(m_telemetry_id, m_current_state);
+    printf("%s to %s\n", m_valvename.c_str(), m_current_state? "open" : "closed");
+	//TODO: Move this call out
+    // SEND_NAME(m_telemetry_id.c_str(), m_current_state, "%d");
 
     gpiod_line_set_value(line, m_current_state);
 }

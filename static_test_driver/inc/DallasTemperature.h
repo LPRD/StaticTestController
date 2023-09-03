@@ -9,6 +9,7 @@
 // version 2.1 of the License, or (at your option) any later version.
 
 #include <inttypes.h>
+#include <stdio.h> 
 #ifdef __STM32F1__
 #include <OneWireSTM.h>
 #else

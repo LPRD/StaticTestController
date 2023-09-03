@@ -1,7 +1,9 @@
 #include "defs.h"
-#include "Telemetry.h"
 #include <iostream>
 #include <sys/time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <cstring>
 
 bool sensors_ok = true;
 std::string error_msg = "";
@@ -22,8 +24,8 @@ LoadCell loadcell_4(LOAD_CELL_4_DOUT, LOAD_CELL_4_CLK, LOAD_CELL_4_CALIBRATION_F
 
 
 //declare thermocouples 
-Thermocouple thermocouple_1(THERMOCOUPLE_PIN_1, "Inlet", "In");
-Thermocouple thermocouple_2(THERMOCOUPLE_PIN_2, "Outlet", "Out");
+Thermocouple thermocouple_1(THERMOCOUPLE_PIN_1, "Inlet", "In", sensors_ok, error_msg);
+Thermocouple thermocouple_2(THERMOCOUPLE_PIN_2, "Outlet", "Out", sensors_ok, error_msg);
 
 
 //declare all valves
@@ -43,8 +45,8 @@ Igniter igniter(IGNITER_PIN);
 unsigned long last_heartbeat = 0;
 
 // Generally-used variables for parsing commands
-char data[10] = "";
-char data_name[20] = "";
+char data[10];
+char data_name[20];
 
 // Calling this performs a software reset of the board, reinitializing sensors
 void (*reset)(void) = 0;
@@ -275,6 +277,10 @@ void run_control(){
 
 // Main code
 void setup() {
+    // Initialize buffers
+    memset(data, 0, 10);
+    memset(data_name, 0, 20);
+
     // Initialize connection
     std::cout << "LPRD static test driver\n";
     std::cout << "Waiting for connection\n";
@@ -346,11 +352,18 @@ void loop() {
         SEND_ITEM(fuel_inj_press, pressure_fuel_injector.m_current_pressure, "%f")
         SEND_ITEM(ox_inj_press, pressure_ox_injector.m_current_pressure, "%f")
         
+        SEND_ITEM(fuel_pre_setting, valve_fuel_pre.m_current_state, "%d");
+        SEND_ITEM(fuel_main_setting, valve_fuel_main.m_current_state, "%d");
+        SEND_ITEM(ox_pre_setting, valve_ox_pre.m_current_state, "%d");
+        SEND_ITEM(ox_main_setting, valve_ox_main.m_current_state, "%d");
+        SEND_ITEM(nitro_fill_setting, valve_n2_choke.m_current_state, "%d");
+        SEND_ITEM(nitro_drain_setting, valve_n2_drain.m_current_state, "%d");
+        
         SEND_ITEM(sensors_ok, sensors_ok, "%d")
     END_SEND
 
     // Read a command
-    bool valve_command;
+    int valve_command;
 
     BEGIN_READ
     READ_FLAG(zero_force) {
@@ -417,4 +430,11 @@ void loop() {
         std::cout << "Invalid data field recieved: " << data_name << ":" << data << std::endl;
     }
     END_READ
+}
+
+int main() {
+  setup();
+  while (true) {
+    loop();
+  }
 }

@@ -4,7 +4,7 @@
 // version 2.1 of the License, or (at your option) any later version.
 
 #include "DallasTemperature.h"
-
+#include <unistd.h>
 
 // OneWire commands
 #define STARTCONVO      0x44  // Tells device to take a temperature reading and put it on the scratchpad
@@ -41,6 +41,15 @@
 // Alarm handler
 #define NO_ALARM_HANDLER ((AlarmHandler *)0)
 
+unsigned int millis ();
+
+int constrain(int x, int a, int b) {
+	if (x < a)
+		return a;
+	if (x > b)
+		return b;
+	return x;
+}
 
 DallasTemperature::DallasTemperature() {
 	useExternalPullup = false;
@@ -74,7 +83,7 @@ DallasTemperature::DallasTemperature(OneWire* _oneWire, uint8_t _pullupPin) : Da
 void DallasTemperature::setPullupPin(uint8_t _pullupPin) {
 	useExternalPullup = true;
 	pullupPin = _pullupPin;
-	pinMode(pullupPin, OUTPUT);
+	// pinMode(pullupPin, OUTPUT);
 	deactivateExternalPullup();
 }
 
@@ -444,11 +453,12 @@ DallasTemperature::request_t DallasTemperature::requestTemperaturesByAddress(con
 void DallasTemperature::blockTillConversionComplete(uint8_t bitResolution, unsigned long start) {
 	if (checkForConversion && !parasite) {
 		while (!isConversionComplete() && (millis() - start <  MAX_CONVERSION_TIMEOUT))
-			yield();
+			;
+			// yield();
 	} else {
 		unsigned long delms = millisToWaitForConversion(bitResolution);
 		activateExternalPullup();
-		delay(delms);
+		usleep(delms*1000);
 		deactivateExternalPullup();
 	}
 
@@ -516,10 +526,10 @@ bool DallasTemperature::saveScratchPad(const uint8_t* deviceAddress) {
 	// Specification: NV Write Cycle Time is typically 2ms, max 10ms
 	// Waiting 20ms to allow for sensors that take longer in practice
 	if (!parasite) {
-		delay(20);
+		usleep(20000);
 	} else {
 		activateExternalPullup();
-		delay(20);
+		usleep(20000);
 		deactivateExternalPullup();
 	}
 
@@ -558,7 +568,7 @@ bool DallasTemperature::recallScratchPad(const uint8_t* deviceAddress) {
 	while (_wire->read_bit() == 0) {
 		// Datasheet doesn't specify typical/max duration, testing reveals typically within 1ms
 		if (millis() - start > 20) return false;
-		yield();
+		// yield();
 	}
 
 	return _wire->reset() == 1;
@@ -577,12 +587,14 @@ bool DallasTemperature::getAutoSaveScratchPad() {
 
 void DallasTemperature::activateExternalPullup() {
 	if (useExternalPullup)
-		digitalWrite(pullupPin, LOW);
+		;
+		// digitalWrite(pullupPin, LOW);
 }
 
 void DallasTemperature::deactivateExternalPullup() {
 	if (useExternalPullup)
-		digitalWrite(pullupPin, HIGH);
+		;
+		// digitalWrite(pullupPin, HIGH);
 }
 
 // sends command for one device to perform a temp conversion by index

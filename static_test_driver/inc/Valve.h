@@ -1,3 +1,6 @@
+#ifndef VALVE_H
+#define VALVE_H
+
 #include <string>
 
 class Valve
@@ -18,3 +21,5 @@ class Valve
 
     void set_valve(bool setting);
 };
+
+#endif

@@ -20,11 +20,12 @@
 
 
 
-unsigned int millis () {
-  struct timeval t ;
-  gettimeofday ( & t , NULL ) ;
-  return t.tv_sec * 1000 + ( t.tv_usec + 500 ) / 1000 ;
-}
+unsigned int millis ();
+// {
+//   struct timeval t ;
+//   gettimeofday ( & t , NULL ) ;
+//   return t.tv_sec * 1000 + ( t.tv_usec + 500 ) / 1000 ;
+// }
 
 // Make shiftIn() be aware of clockspeed for
 // faster CPUs like ESP32, Teensy 3.x and friends.

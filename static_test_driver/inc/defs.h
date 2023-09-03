@@ -9,6 +9,8 @@
 #include "Valve.h"
 #include "ServoArm.h"
 #include "Igniter.h"
+#include "Telemetry.h"
+
 
 #include "HX711.h"
 #include <string>
@@ -20,8 +22,7 @@
 // #define PRESSURE_OFFSET 118.33
 
 
-#define TEMP_MIN_VALID -10
-#define TEMP_MAX_VALID 120
+
 
 #if CONFIGURATION == MK_2
 #define LOAD_CELL_1_CALIBRATION_FACTOR 4700

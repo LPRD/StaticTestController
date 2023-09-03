@@ -80,7 +80,8 @@ void wait_for_connection() {
 
 #define END_SEND                                \
   strcat(buffer, "&&&&&");                      \
-  write(client_fd, buffer, strlen(buffer));     \
+  if (write(client_fd, buffer, strlen(buffer)) == -1)\
+    perror("write");                              \
   }
 
 #define SEND(field, value, format)              \
@@ -111,7 +112,7 @@ void wait_for_connection() {
   else if (!strcmp(_data, #field":"))
 
 #define READ_DEFAULT(field_name, var)                           \
-  else if (sscanf(_data, "%[^:]:%s", &field_name, &var))
+  else if (sscanf(_data, "%[^:]:%s", field_name, var))
 
 #define END_READ } L_ENDREAD:;
 

@@ -1,9 +1,10 @@
-class ServoArm
-{
- private:
-   //  Servo servo;
+#include "Servo.h"
+
+class ServoArm {
+  public:
+    //TODO: Try to make this private
+    Servo servo;
     
- public:
     ServoArm(int pin);
     
     void extend();
