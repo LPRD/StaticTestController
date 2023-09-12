@@ -29,12 +29,12 @@ Thermocouple thermocouple_2(THERMOCOUPLE_PIN_2, "Outlet", "Out", sensors_ok, err
 
 
 //declare all valves
-Valve valve_fuel_pre{FUEL_PRE_PIN, "fuel pre", "fuel_pre_setting"};
-Valve valve_fuel_main{FUEL_MAIN_PIN, "fuel main", "fuel_main_setting"};
-Valve valve_ox_pre{OX_PRE_PIN, "oxygen pre", "ox_pre_setting"};
-Valve valve_ox_main{OX_MAIN_PIN, "oxygen main", "ox_main_setting"};
-Valve valve_n2_choke{N2_CHOKE_PIN, "n2 choke", "nitro_fill_setting"};
-Valve valve_n2_drain{N2_DRAIN_PIN, "n2 drain", "nitro_drain_setting"};
+Valve valve_fuel_pre(FUEL_PRE_PIN, "fuel pre", "fuel_pre_setting");
+Valve valve_fuel_main(FUEL_MAIN_PIN, "fuel main", "fuel_main_setting");
+Valve valve_ox_pre(OX_PRE_PIN, "oxygen pre", "ox_pre_setting");
+Valve valve_ox_main(OX_MAIN_PIN, "oxygen main", "ox_main_setting");
+Valve valve_n2_fill(N2_FILL_PIN, "n2 fill", "nitro_fill_setting");
+Valve valve_n2_drain(N2_DRAIN_PIN, "n2 drain", "nitro_drain_setting");
 
 
 //declare servo for the ignition arm
@@ -93,7 +93,7 @@ void start_countdown(){
       valve_fuel_main.m_current_state ||
       valve_ox_pre.m_current_state    ||
       valve_ox_main.m_current_state   ||
-      valve_n2_choke.m_current_state  ||
+      valve_n2_fill.m_current_state  ||
       valve_n2_drain.m_current_state  ){
         std::cout << "Countdown aborted due to unexpected initial valve state.\n";
         set_state(STAND_BY, &state);
@@ -118,14 +118,14 @@ void abort_autosequence(){
       break;
 
     case PRESTAGE_READY:
-      valve_n2_choke.set_valve(0);
+      valve_n2_fill.set_valve(0);
       valve_fuel_pre.set_valve(0);
       valve_ox_pre.set_valve(0);
       set_state(STAND_BY, &state);
       break;
 
     case PRESTAGE:
-      valve_n2_choke.set_valve(0);
+      valve_n2_fill.set_valve(0);
       valve_fuel_pre.set_valve(0);
       valve_ox_pre.set_valve(0);
       igniter.reset_igniter();
@@ -134,7 +134,7 @@ void abort_autosequence(){
       break;
 
     case MAINSTAGE:
-      valve_n2_choke.set_valve(0);
+      valve_n2_fill.set_valve(0);
       valve_fuel_pre.set_valve(0);
       valve_ox_pre.set_valve(0);
       set_state(SHUTDOWN, &state);
@@ -176,7 +176,7 @@ void run_control(){
       #endif
       if (run_time >= PRESTAGE_PREP_TIME){
         valve_fuel_pre.set_valve(1);
-        valve_n2_choke.set_valve(1);
+        valve_n2_fill.set_valve(1);
         valve_ox_pre.set_valve(1);
         set_state(PRESTAGE_READY, &state);
         
@@ -246,7 +246,7 @@ void run_control(){
 
     case OXYGEN_SHUTDOWN:
       if (millis() >= shutdown_time + OX_LEADTIME){
-        valve_n2_choke.set_valve(0);
+        valve_n2_fill.set_valve(0);
         valve_fuel_pre.set_valve(0);
         set_state(SHUTDOWN, &state);
       }
@@ -303,7 +303,7 @@ void setup() {
     // valve_fuel_main.init_valve();
     // valve_ox_pre.init_valve();
     // valve_ox_main.init_valve();
-    // valve_n2_choke.init_valve();
+    // valve_n2_fill.init_valve();
     // valve_n2_drain.init_valve();
 
     // Set initial state
@@ -356,7 +356,7 @@ void loop() {
         SEND_ITEM(fuel_main_setting, valve_fuel_main.m_current_state, "%d");
         SEND_ITEM(ox_pre_setting, valve_ox_pre.m_current_state, "%d");
         SEND_ITEM(ox_main_setting, valve_ox_main.m_current_state, "%d");
-        SEND_ITEM(nitro_fill_setting, valve_n2_choke.m_current_state, "%d");
+        SEND_ITEM(nitro_fill_setting, valve_n2_fill.m_current_state, "%d");
         SEND_ITEM(nitro_drain_setting, valve_n2_drain.m_current_state, "%d");
         
         SEND_ITEM(sensors_ok, sensors_ok, "%d")
@@ -421,7 +421,7 @@ void loop() {
         valve_ox_main.set_valve(valve_command);
     }
     READ_FIELD(nitro_fill_command, "%d", valve_command) {
-        valve_n2_choke.set_valve(valve_command);
+        valve_n2_fill.set_valve(valve_command);
     }
     READ_FIELD(nitro_drain_command, "%d", valve_command) {
         valve_n2_drain.set_valve(valve_command);
