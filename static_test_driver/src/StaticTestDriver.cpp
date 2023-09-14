@@ -37,8 +37,6 @@ Valve valve_n2_fill(N2_FILL_PIN, "n2 fill", "nitro_fill_setting");
 Valve valve_n2_drain(N2_DRAIN_PIN, "n2 drain", "nitro_drain_setting");
 
 
-//declare servo for the ignition arm
-ServoArm servo_arm(SERVO_PIN);
 
 Igniter igniter(IGNITER_PIN);
 
@@ -110,7 +108,6 @@ void abort_autosequence(){
   std::cout << "run aborted\n";
   switch (state){
     case STAND_BY:
-      servo_arm.retract();
       break;
       
     case TERMINAL_COUNT:
@@ -161,10 +158,6 @@ void run_control(){
       // if (!sensors_ok){
       //   set_lcd_status("Sensor Failure");
       // }
-      if (servo_arm.servo.read() !=0) {
-        std::cout << "Servo not activated\n";
-        abort_autosequence();
-      }
       break;
 
     case TERMINAL_COUNT:
@@ -199,13 +192,6 @@ void run_control(){
 //      break;
 
     case PRESTAGE:
-      if (run_time >= RETRACTION_TIME){
-        servo_arm.retract();
-        set_state(RETRACTION, &state);
-      }
-      break;
-
-     case RETRACTION:
       if (run_time >= MAINSTAGE_TIME){
         valve_fuel_main.set_valve(1);
         valve_ox_main.set_valve(1);
@@ -401,9 +387,6 @@ void loop() {
     READ_FLAG(stop) {
         std::cout << "Manual abort initiated\n";
         abort_autosequence();
-    }
-    READ_FLAG(extend_servo) {
-      servo_arm.extend();
     }
     READ_FLAG(fire_igniter) {
         igniter.fire_igniter();

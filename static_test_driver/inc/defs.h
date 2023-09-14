@@ -1,5 +1,4 @@
 // #include <Telemetry.h>
-// #include <Servo.h>
 // #include <OneWire.h>
 // #include <DallasTemperature.h>
 
@@ -7,7 +6,6 @@
 #include "LoadCell.h"
 #include "Thermocouple.h"
 #include "Valve.h"
-#include "ServoArm.h"
 #include "Igniter.h"
 #include "Telemetry.h"
 
@@ -42,7 +40,6 @@
 //  IGNITER DEFINES
 
 #define IGNITER_PIN 15
-#define SERVO_PIN 13
 
 #if CONFIGURATION == DEMO
 #define IGNITER_DURATION 5000
@@ -95,7 +92,6 @@ typedef enum{
   TERMINAL_COUNT,
   PRESTAGE_READY,
   PRESTAGE,
-  RETRACTION,
   MAINSTAGE,
   OXYGEN_SHUTDOWN,
   SHUTDOWN,
@@ -107,7 +103,6 @@ const char *states[9] = {
   "TERMINAL_COUNT",
   "PRESTAGE_READY",
   "PRESTAGE",
-  "RETRACTION",
   "MAINSTAGE",
   "OXYGEN_SHUTDOWN",
   "SHUTDOWN",
@@ -125,7 +120,6 @@ const char *states[9] = {
 //BELOW VALUES ARE DEFINED FROM END OF COUNTDOWN
 #define PRESTAGE_PREP_TIME 0              // Time at which to open the prestage valves
 #define PRESTAGE_TIME      2000           // Time at which the ignitor fires - make sure this is right
-#define RETRACTION_TIME    4000           // Time at which the ignitor arm retracts, concluding ignition time - make sure this is right
 #define MAINSTAGE_TIME     5000           // Time at which the main valves open - make sure this is right
 #define THRUST_CHECK_TIME  6500           // Time at which to start measuring engine output thrust (2 seconds)
 // BELOW VALUES ARE DEFINED FROM SHUTDOWN
