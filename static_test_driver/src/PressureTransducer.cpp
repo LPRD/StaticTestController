@@ -17,8 +17,8 @@ int analogRead(int pin) {
     }
 
     // Build filename
-    char filename[100];
-    sprintf(filename, "/sys/devices/platform/ocp/44e0d000.tscadc/TI-am335x-adc.0.auto/iio:device0/in_voltage%d_raw", pin);
+    char filename[256];
+    sprintf(filename, "/sys/devices/platform/ocp/44c00000.interconnect/44c00000.interconnect:segment@200000/44e0d000.target-module/44e0d000.tscadc/TI-am335x-adc.0.auto/iio:device0/in_voltage%d_raw", pin);
     
     // Open file
     int fd = open(filename, O_EXCL);
@@ -33,6 +33,12 @@ int analogRead(int pin) {
         perror("read");
         return -1;
     }
+
+    if (close(fd) == -1) {
+        perror("close");
+        return -1;
+    }
+    
     return buffer;
 }
 
