@@ -1,7 +1,7 @@
 class Igniter
 {
  private:
-    long ignition_time;
+    // long ignition_time;
     struct gpiod_chip *chip;
 	struct gpiod_line *line;
 
@@ -10,7 +10,7 @@ class Igniter
 
     ~Igniter();
 
-    void handle_igniter ();
+    // void handle_igniter ();
 
     void reset_igniter (); 
 

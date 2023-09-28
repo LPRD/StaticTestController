@@ -15,11 +15,7 @@ PressureTransducer pressure_fuel_injector(PRESSURE_FUEL_INJECTOR, "injector fuel
 PressureTransducer pressure_ox_injector(PRESSURE_OX_INJECTOR, "injector oxygen", "OxE", sensors_ok, error_msg);
 
 //declare load cells
-LoadCell loadcell_1(LOAD_CELL_1_DOUT, LOAD_CELL_1_CLK, LOAD_CELL_1_CALIBRATION_FACTOR, 1, sensors_ok, error_msg);
-LoadCell loadcell_2(LOAD_CELL_2_DOUT, LOAD_CELL_2_CLK, LOAD_CELL_2_CALIBRATION_FACTOR, 2, sensors_ok, error_msg);
-LoadCell loadcell_3(LOAD_CELL_3_DOUT, LOAD_CELL_3_CLK, LOAD_CELL_3_CALIBRATION_FACTOR, 3, sensors_ok, error_msg);
-LoadCell loadcell_4(LOAD_CELL_4_DOUT, LOAD_CELL_4_CLK, LOAD_CELL_4_CALIBRATION_FACTOR, 4, sensors_ok, error_msg);
-
+LoadCell loadcell(LOAD_CELL_1_DOUT, LOAD_CELL_1_CLK, LOAD_CELL_1_CALIBRATION_FACTOR, 1, sensors_ok, error_msg);
 
 //declare thermocouples 
 Thermocouple thermocouple_1(THERMOCOUPLE_PIN_1, "Inlet", "In", sensors_ok, error_msg);
@@ -61,6 +57,7 @@ void set_state(state_t state, state_t * state_var) {
 long start_time     = 0;
 long shutdown_time  = 0;
 long heartbeat_time = 0;
+long ignition_time  = 0;
 
 state_t state = STAND_BY;
 
@@ -135,11 +132,17 @@ void abort_autosequence(){
 }
 
 void run_control(){
+  // Update run time variable
   long run_time = millis() - start_time - COUNTDOWN_DURATION;
   SEND(run_time, run_time, "%ld");
 
-  igniter.handle_igniter();
-
+  // Deactivate Igniter if necessary
+  if (ignition_time != 0  && run_time > ignition_time + IGNITER_DURATION) {
+      igniter.reset_igniter();
+      ignition_time = 0;
+  }
+  
+  // Check for recent communication with GUI
   #if CONFIGURATION == MK_2_FULL || CONFIGURATION == MK_2_LOW
     if (state!=STAND_BY  &&  state!=COOL_DOWN  &&  millis() > heartbeat_time + HEARTBEAT_TIMEOUT){
       printf("Loss of data link\n");
@@ -149,37 +152,33 @@ void run_control(){
 
   switch (state){
     case TERMINAL_COUNT:
+      // Check sensor status
       #if CONFIGURATION != DEMO
         if (!sensors_ok){
           printf("Sensor failure\n");
           abort_autosequence();
         }else
       #endif
+      // Open fuel_pre, n2_fill, ox_pre
       if (run_time >= PRESTAGE_PREP_TIME){
         valve_fuel_pre.set_valve(1);
         valve_n2_fill.set_valve(1);
         valve_ox_pre.set_valve(1);
         set_state(PRESTAGE_READY, &state);
-        
       }
       break;
 
     case PRESTAGE_READY:
+      // Fire igniter
       if (run_time >= PRESTAGE_TIME){
         igniter.fire_igniter();
+        ignition_time = millis();
         set_state(PRESTAGE, &state);
       }
       break;
 
-//    case PRESTAGE:
-//      if (run_time >= MAINSTAGE_TIME){
-//        valve_fuel_main.set_valve(1);
-//        valve_ox_main.set_valve(1);
-//        set_state(MAINSTAGE, &state);
-//      }
-//      break;
-
     case PRESTAGE:
+      // Open fuel_main and ox_main
       if (run_time >= MAINSTAGE_TIME){
         valve_fuel_main.set_valve(1);
         valve_ox_main.set_valve(1);
@@ -188,6 +187,7 @@ void run_control(){
       break;
 
     case MAINSTAGE:
+      // Check sensor status
       #if CONFIGURATION != DEMO
         if (!sensors_ok){
           printf("Sensor Failure\n");
@@ -195,23 +195,15 @@ void run_control(){
         }
       #endif
       //Check outlet temperature
-      //TODO: Should this be a function call instead of a parameter reference?
-      //TODO: Also, rename the thermocouples.
       if (thermocouple_2.m_current_temp >= MAX_COOLANT_TEMP){
         printf("Temperature reached critical level. Shuttung down.\n");
         abort_autosequence();
       }
-      else{ 
-        // Force will be the sum of the four loadcells for the purpose of error checking
-        {
-        float force = (loadcell_1.m_current_force + loadcell_2.m_current_force +
-                         loadcell_3.m_current_force + loadcell_4.m_current_force);
-        if (run_time >= THRUST_CHECK_TIME && force < MIN_THRUST){
-          printf("Thrust below critical level. Shutting down.\n");
-          abort_autosequence();
-        }
-        }
-      }  
+      // Check Force
+      else if (run_time >= THRUST_CHECK_TIME && loadcell.m_current_force < MIN_THRUST){
+        printf("Thrust below critical level. Shutting down.\n");
+        abort_autosequence();
+      }
 
       if (run_time >= RUN_TIME){
         set_state(OXYGEN_SHUTDOWN, &state);
@@ -267,10 +259,7 @@ void setup() {
     printf("Initializing...\n");
 
     //init forces
-    loadcell_1.init_loadcell();
-    loadcell_2.init_loadcell();
-    loadcell_3.init_loadcell();
-    loadcell_4.init_loadcell();
+    loadcell.init_loadcell();
 
     //thermocouples
     thermocouple_1.init_thermocouple();
@@ -284,10 +273,7 @@ void setup() {
 
 void loop() {
     // Grab force data
-    loadcell_1.updateForces();
-    loadcell_2.updateForces();
-    loadcell_3.updateForces();
-    loadcell_4.updateForces();
+    loadcell.updateForces();
     
     // Update pressures
     pressure_fuel.updatePressures();
@@ -308,10 +294,7 @@ void loop() {
 
     // Send collected data
     BEGIN_SEND
-        SEND_ITEM(force1, loadcell_1.m_current_force, "%f")
-        SEND_ITEM(force2, loadcell_2.m_current_force, "%f")
-        SEND_ITEM(force3, loadcell_3.m_current_force, "%f")
-        SEND_ITEM(force4, loadcell_4.m_current_force, "%f")
+        SEND_ITEM(force, loadcell.m_current_force, "%f")
         
         SEND_ITEM(outlet_temp, thermocouple_1.m_current_temp, "%f")
         SEND_ITEM(inlet_temp, thermocouple_2.m_current_temp, "%f")
@@ -337,10 +320,7 @@ void loop() {
     BEGIN_READ
     READ_FLAG(zero_force) {
         printf("Zeroing load cells\n");
-        loadcell_1.zeroForces(); 
-        loadcell_2.zeroForces(); 
-        loadcell_3.zeroForces(); 
-        loadcell_4.zeroForces(); 
+        loadcell.zeroForces(); 
     }
 
     READ_FLAG(zero_pressure) {

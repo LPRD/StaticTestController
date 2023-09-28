@@ -3,7 +3,7 @@
 #include "Igniter.h"
 
 Igniter::Igniter(int pin){
-    ignition_time = 0.0;
+    // ignition_time = 0.0;
 
     // Open the chips for the valve pin.
 	chip = gpiod_chip_open_by_number(pin / 32);
@@ -39,11 +39,11 @@ void Igniter::fire_igniter() {
 void Igniter::reset_igniter() {
     std::cout << "Reset igniter\n";
     gpiod_line_set_value(line, 0);
-    ignition_time = 0;
+    // ignition_time = 0;
 }
 
-void Igniter::handle_igniter() {
-    if (ignition_time != 0 /* && millis() > ignition_time + IGNITER_DURATION */) {
-        reset_igniter();
-    }
-}
+// void Igniter::handle_igniter() {
+//     if (ignition_time != 0 /* && millis() > ignition_time + IGNITER_DURATION */) {
+//         reset_igniter();
+//     }
+// }
