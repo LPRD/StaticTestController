@@ -79,7 +79,7 @@ void wait_for_connection() {
   sprintf(buffer + strlen(buffer), format, value);
 
 #define END_SEND                                \
-  strcat(buffer, "&&&&&");                      \
+  strcat(buffer, "&&&&&\r\n");                      \
   if (write(client_fd, buffer, strlen(buffer)) == -1)\
     perror("write");                              \
   }
