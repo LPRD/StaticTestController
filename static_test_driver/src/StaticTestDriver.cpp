@@ -14,8 +14,6 @@ PressureTransducer pressure_ox(PRESSURE_OX, "oxygen", "Ox", sensors_ok, error_ms
 PressureTransducer pressure_fuel_injector(PRESSURE_FUEL_INJECTOR, "injector fuel", "FlE", sensors_ok, error_msg);
 PressureTransducer pressure_ox_injector(PRESSURE_OX_INJECTOR, "injector oxygen", "OxE", sensors_ok, error_msg);
 
-bool global_pressure_zero_ready = false;
-
 //declare load cells
 LoadCell loadcell_1(LOAD_CELL_1_DOUT, LOAD_CELL_1_CLK, LOAD_CELL_1_CALIBRATION_FACTOR, 1, sensors_ok, error_msg);
 LoadCell loadcell_2(LOAD_CELL_2_DOUT, LOAD_CELL_2_CLK, LOAD_CELL_2_CALIBRATION_FACTOR, 2, sensors_ok, error_msg);
@@ -36,17 +34,15 @@ Valve valve_ox_main(OX_MAIN_PIN, "oxygen main", "ox_main_setting");
 Valve valve_n2_fill(N2_FILL_PIN, "n2 fill", "nitro_fill_setting");
 Valve valve_n2_drain(N2_DRAIN_PIN, "n2 drain", "nitro_drain_setting");
 
-
-
 Igniter igniter(IGNITER_PIN);
-
-unsigned long last_heartbeat = 0;
 
 // Generally-used variables for parsing commands
 char data[10];
 char data_name[20];
 
 // Calling this performs a software reset of the board, reinitializing sensors
+// TODO: Reset causes a seg fault and kills the program
+//       Could maybe just add a process to always restart it
 void (*reset)(void) = 0;
 
 // Function to replace Arduino.h millis()
@@ -56,7 +52,7 @@ unsigned int millis () {
   return t.tv_sec * 1000 + ( t.tv_usec + 500 ) / 1000 ;
 }
 
-// Autosequence Functions
+// Set the state variable and send it the state to the GUI
 void set_state(state_t state, state_t * state_var) {
   *state_var = state;
   SEND(status, states[state], "%s");
@@ -68,10 +64,7 @@ long heartbeat_time = 0;
 
 state_t state = STAND_BY;
 
-// void blink(int led, long period){
-//   digitalWrite(led, (int)((millis() % (period * 2)) / period));
-// }
-
+// Update hearbeat_time to have the current time
 void heartbeat(){
   heartbeat_time = millis();
 }
@@ -83,7 +76,7 @@ void init_autosequence(){
 void start_countdown(){
   #if CONFIGURATION != DEMO
     if (sensors_ok == false){
-      std::cout << "Countdown aborted due to sensor failure\n";
+      printf("Countdown aborted due to sensor failure\n");
       set_state(STAND_BY, &state);
     }else
   #endif
@@ -91,25 +84,23 @@ void start_countdown(){
       valve_fuel_main.m_current_state ||
       valve_ox_pre.m_current_state    ||
       valve_ox_main.m_current_state   ||
-      valve_n2_fill.m_current_state  ||
+      valve_n2_fill.m_current_state   ||
       valve_n2_drain.m_current_state  ){
-        std::cout << "Countdown aborted due to unexpected initial valve state.\n";
+        printf("Countdown aborted due to unexpected initial valve state.\n");
         set_state(STAND_BY, &state);
   }
   else{
-    std::cout << "Countdown has started\n";
+    printf("Countdown has started\n");
     set_state(TERMINAL_COUNT, &state);
+    // Save the current time for reference later
     start_time = millis();
     heartbeat();
   }
 }
 
 void abort_autosequence(){
-  std::cout << "run aborted\n";
-  switch (state){
-    case STAND_BY:
-      break;
-      
+  printf("run aborted\n");
+  switch (state){ 
     case TERMINAL_COUNT:
       set_state(STAND_BY, &state);
       break;
@@ -137,6 +128,9 @@ void abort_autosequence(){
       set_state(SHUTDOWN, &state);
       shutdown_time = millis();
       break;
+
+    default:
+      break;
   }
 }
 
@@ -148,22 +142,16 @@ void run_control(){
 
   #if CONFIGURATION == MK_2_FULL || CONFIGURATION == MK_2_LOW
     if (state!=STAND_BY  &&  state!=COOL_DOWN  &&  millis() > heartbeat_time + HEARTBEAT_TIMEOUT){
-      std::cout << "Loss of data link\n";
+      printf("Loss of data link\n");
       abort_autosequence();
-    }else
+    }
   #endif
 
   switch (state){
-    case STAND_BY:
-      // if (!sensors_ok){
-      //   set_lcd_status("Sensor Failure");
-      // }
-      break;
-
     case TERMINAL_COUNT:
       #if CONFIGURATION != DEMO
         if (!sensors_ok){
-          std::cout << "Sensor failure\n";
+          printf("Sensor failure\n");
           abort_autosequence();
         }else
       #endif
@@ -202,24 +190,26 @@ void run_control(){
     case MAINSTAGE:
       #if CONFIGURATION != DEMO
         if (!sensors_ok){
-          std::cout << "Sensor Failure\n";
+          printf("Sensor Failure\n");
           abort_autosequence();
-        }else
+        }
       #endif
       //Check outlet temperature
       //TODO: Should this be a function call instead of a parameter reference?
       //TODO: Also, rename the thermocouples.
       if (thermocouple_2.m_current_temp >= MAX_COOLANT_TEMP){
-        std::cout << "Temperature reached critical level. Shuttung down.\n";
+        printf("Temperature reached critical level. Shuttung down.\n");
         abort_autosequence();
       }
       else{ 
         // Force will be the sum of the four loadcells for the purpose of error checking
+        {
         float force = (loadcell_1.m_current_force + loadcell_2.m_current_force +
                          loadcell_3.m_current_force + loadcell_4.m_current_force);
         if (run_time >= THRUST_CHECK_TIME && force < MIN_THRUST){
-          std::cout << "Thrust below critical level. Shutting down.\n";
+          printf("Thrust below critical level. Shutting down.\n");
           abort_autosequence();
+        }
         }
       }  
 
@@ -252,11 +242,13 @@ void run_control(){
         valve_n2_drain.set_valve(1);
       }
       if (millis() - shutdown_time >= COOLDOWN_TIME){
-        std::cout << "Run finished\n";
+        printf("Run finished\n");
         valve_n2_drain.set_valve(0);
         set_state(STAND_BY, &state);
         start_time = 0;
       }
+      break;
+    default:
       break;
   }
 }
@@ -268,11 +260,11 @@ void setup() {
     memset(data_name, 0, 20);
 
     // Initialize connection
-    std::cout << "LPRD static test driver\n";
-    std::cout << "Waiting for connection\n";
+    printf("LPRD static test driver\n");
+    printf("Waiting for connection\n");
     wait_for_connection();
 
-    std::cout << "Initializing...\n";
+    printf("Initializing...\n");
 
     //init forces
     loadcell_1.init_loadcell();
@@ -284,18 +276,10 @@ void setup() {
     thermocouple_1.init_thermocouple();
     thermocouple_2.init_thermocouple();
 
-    // //init all valves
-    // valve_fuel_pre.init_valve();
-    // valve_fuel_main.init_valve();
-    // valve_ox_pre.init_valve();
-    // valve_ox_main.init_valve();
-    // valve_n2_fill.init_valve();
-    // valve_n2_drain.init_valve();
-
     // Set initial state
     init_autosequence();
 
-    std::cout << "Setup Complete\n";
+    printf("Setup Complete\n");
 }
 
 void loop() {
@@ -315,9 +299,8 @@ void loop() {
     thermocouple_1.updateTemps();
     thermocouple_2.updateTemps();
 
-   
     // Update sensor diagnostic message on GUI
-    std::cout << error_msg << std::endl;
+    printf("%s\n", error_msg.c_str());
     error_msg = "";
 
     // Run autonomous control
@@ -353,7 +336,7 @@ void loop() {
 
     BEGIN_READ
     READ_FLAG(zero_force) {
-        std::cout << "Zeroing load cells\n";
+        printf("Zeroing load cells\n");
         loadcell_1.zeroForces(); 
         loadcell_2.zeroForces(); 
         loadcell_3.zeroForces(); 
@@ -362,15 +345,15 @@ void loop() {
 
     READ_FLAG(zero_pressure) {
         if (pressure_fuel.m_zero_ready || pressure_ox.m_zero_ready) {
-            std::cout << "Zeroing fuel pressure\n";
+            printf("Zeroing fuel pressure\n");
             pressure_fuel.zeroPressures();
             pressure_fuel.m_zero_ready = false;
-            std::cout << "Zeroing oxidizer pressure\n";
+            printf("Zeroing oxidizer pressure\n");
             pressure_ox.zeroPressures();
             pressure_ox.m_zero_ready = false;
         }
         else {
-            std::cout << "Pressure zero values not ready\n";
+            printf("Pressure zero values not ready\n");
         }
     }
 
@@ -378,14 +361,14 @@ void loop() {
         heartbeat();
     }
     READ_FLAG(reset) {
-        std::cout << "Resetting board\n";
+        printf("Resetting board\n");
         reset();
     }
     READ_FLAG(start) {
         start_countdown();
     }
     READ_FLAG(stop) {
-        std::cout << "Manual abort initiated\n";
+        printf("Manual abort initiated\n");
         abort_autosequence();
     }
     READ_FLAG(fire_igniter) {
@@ -410,7 +393,7 @@ void loop() {
         valve_n2_drain.set_valve(valve_command);
     }
     READ_DEFAULT(data_name, data) {
-        std::cout << "Invalid data field recieved: " << data_name << ":" << data << std::endl;
+        printf("Invalid data field recieved: %s: %s\n", data_name, data);
     }
     END_READ
 }
