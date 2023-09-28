@@ -1,9 +1,16 @@
-#include "defs.h"
 #include <iostream>
 #include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <cstring>
+
+#include "defs.h"
+#include "Telemetry.h"
+#include "Valve.h"
+#include "PressureTransducer.h"
+#include "Igniter.h"
+#include "Thermocouple.h"
+#include "LoadCell.h"
 
 bool sensors_ok = true;
 std::string error_msg = "";
@@ -137,7 +144,7 @@ void run_control(){
   SEND(run_time, run_time, "%ld");
 
   // Deactivate Igniter if necessary
-  if (ignition_time != 0  && run_time > ignition_time + IGNITER_DURATION) {
+  if (ignition_time != 0  && millis() > ignition_time + IGNITER_DURATION) {
       igniter.reset_igniter();
       ignition_time = 0;
   }
@@ -205,14 +212,16 @@ void run_control(){
         abort_autosequence();
       }
 
+      // Start shutdown sequence by closing ox_pre valve
       if (run_time >= RUN_TIME){
-        set_state(OXYGEN_SHUTDOWN, &state);
         valve_ox_pre.set_valve(0);
         shutdown_time = millis();
+        set_state(OXYGEN_SHUTDOWN, &state);
       }
       break;
 
     case OXYGEN_SHUTDOWN:
+      // Close n2_fill and fuel_pre
       if (millis() >= shutdown_time + OX_LEADTIME){
         valve_n2_fill.set_valve(0);
         valve_fuel_pre.set_valve(0);
@@ -221,6 +230,7 @@ void run_control(){
       break;
 
     case SHUTDOWN:
+      // Close ox_main and fuel_main. Open n2_drain
       if (millis() >= shutdown_time + PRE_LEADTIME){
         valve_ox_main.set_valve(0);
         valve_fuel_main.set_valve(0);
@@ -230,6 +240,7 @@ void run_control(){
       break;
 
     case COOL_DOWN:
+      // TODO: trace logic to see if "if" is necessary
       if (!valve_n2_drain.m_current_state){
         valve_n2_drain.set_valve(1);
       }
@@ -240,6 +251,7 @@ void run_control(){
         start_time = 0;
       }
       break;
+
     default:
       break;
   }
@@ -252,16 +264,15 @@ void setup() {
     memset(data_name, 0, 20);
 
     // Initialize connection
-    printf("LPRD static test driver\n");
-    printf("Waiting for connection\n");
+    printf("LPRD Static Test Driver\n");
+    printf("Blocking and waiting for connection...\n");
     wait_for_connection();
+    printf("Connected\n");
 
-    printf("Initializing...\n");
-
-    //init forces
+    // Initialize LC
     loadcell.init_loadcell();
 
-    //thermocouples
+    // Initialize Thermocouples
     thermocouple_1.init_thermocouple();
     thermocouple_2.init_thermocouple();
 
