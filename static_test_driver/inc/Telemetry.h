@@ -1,6 +1,4 @@
-// Contains defs for standard packet io protocol
-// To read floating point numbers, you need to change your arduino configuration settings
-
+// Header file library for IP/TCP communication with custom protocol
 
 #ifndef _TELEMETRY_H
 #define _TELEMETRY_H

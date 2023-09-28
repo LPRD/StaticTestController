@@ -1,4 +1,3 @@
-// #include "defs.h"
 #include "Sensor.h"
 #include <iostream>
 

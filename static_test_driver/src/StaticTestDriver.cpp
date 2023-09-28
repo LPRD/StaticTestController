@@ -4,13 +4,35 @@
 #include <stdlib.h>
 #include <cstring>
 
-#include "defs.h"
+#include "Constants.h"
 #include "Telemetry.h"
 #include "Valve.h"
 #include "PressureTransducer.h"
 #include "Igniter.h"
 #include "Thermocouple.h"
 #include "LoadCell.h"
+
+typedef enum{
+  STAND_BY,
+  TERMINAL_COUNT,
+  PRESTAGE_READY,
+  PRESTAGE,
+  MAINSTAGE,
+  OXYGEN_SHUTDOWN,
+  SHUTDOWN,
+  COOL_DOWN
+}  state_t;
+
+const char *states[9] = {
+  "STAND_BY",
+  "TERMINAL_COUNT",
+  "PRESTAGE_READY",
+  "PRESTAGE",
+  "MAINSTAGE",
+  "OXYGEN_SHUTDOWN",
+  "SHUTDOWN",
+  "COOL_DOWN"
+};
 
 bool sensors_ok = true;
 std::string error_msg = "";
