@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <poll.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
@@ -18,6 +19,8 @@
 #define BUFFER_SIZE 1024
 
 int client_fd = 0;
+struct pollfd poll_fd[1];
+
 
 void wait_for_connection() {
   int server_fd = 0;
@@ -49,11 +52,15 @@ void wait_for_connection() {
   if ((client_fd = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
       perror("accept");
   } else {
-      // Set the new client socket to be non-blocking
-      if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0) {
-          perror("fcntl");
-          exit(EXIT_FAILURE);
-      }
+    // Set the new client socket to be non-blocking
+    if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0) {
+        perror("fcntl");
+        exit(EXIT_FAILURE);
+    }
+	  // Set the file descriptor in the poll struct  
+    poll_fd[0].events = POLLOUT;
+	  poll_fd[0].fd = client_fd;
+
   }
   }
 
@@ -79,10 +86,15 @@ void wait_for_connection() {
   sprintf(buffer + strlen(buffer), format, value);
 
 #define END_SEND                                \
-  strcat(buffer, "&&&&&\r\n");                      \
-  if (write(client_fd, buffer, strlen(buffer)) == -1)\
-    perror("write");                              \
-  }
+  	strcat(buffer, "&&&&&\r\n");  				      \
+  	int num_ready = poll(poll_fd, 1, 0);	    	\
+  	if (num_ready == -1) { perror("poll"); }  	\
+	  if (num_ready == 1 && poll_fd[0].revents & POLLOUT) { \
+		if (write(client_fd, buffer, strlen(buffer)) == -1) {\
+			perror("write");                          \
+		}										                        \
+  	}                    					            	\
+    }
 
 #define SEND(field, value, format)              \
   BEGIN_SEND                                    \
@@ -100,7 +112,7 @@ void wait_for_connection() {
   char _data[BUFFER_SIZE - 10];                                         \
   if (read(client_fd, _buffer, BUFFER_SIZE) > 0) {                      \
     if (!sscanf(_buffer, "@@@@@%[^&]&&&&&", _data)) {                   \
-      printf("READ packet error");                 \
+      printf("READ packet error");                						\
       goto L_ENDREAD;                                                   \
     }                                                                   \
     if (0);
