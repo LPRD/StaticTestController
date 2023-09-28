@@ -85,4 +85,10 @@
   #define MIN_THRUST  -10
 #endif
 
+#if CONFIGURATION == DEMO
+#define CHECK_SENSORS false
+#else
+#define CHECK_SENSORS true
+#endif
+
 #endif 

@@ -23,101 +23,83 @@ typedef enum{
   COOL_DOWN
 }  state_t;
 
-const char *states[9] = {
-  "STAND_BY",
-  "TERMINAL_COUNT",
-  "PRESTAGE_READY",
-  "PRESTAGE",
-  "MAINSTAGE",
-  "OXYGEN_SHUTDOWN",
-  "SHUTDOWN",
-  "COOL_DOWN"
-};
-
-bool sensors_ok = true;
-std::string error_msg = "";
-
-//declare pressure transducers
-PressureTransducer pressure_fuel(PRESSURE_FUEL, "fuel", "Fl", sensors_ok, error_msg);
-PressureTransducer pressure_ox(PRESSURE_OX, "oxygen", "Ox", sensors_ok, error_msg);
-PressureTransducer pressure_fuel_injector(PRESSURE_FUEL_INJECTOR, "injector fuel", "FlE", sensors_ok, error_msg);
-PressureTransducer pressure_ox_injector(PRESSURE_OX_INJECTOR, "injector oxygen", "OxE", sensors_ok, error_msg);
-
-//declare load cells
-LoadCell loadcell(LOAD_CELL_1_DOUT, LOAD_CELL_1_CLK, LOAD_CELL_1_CALIBRATION_FACTOR, 1, sensors_ok, error_msg);
-
-//declare thermocouples 
-Thermocouple thermocouple_1(THERMOCOUPLE_PIN_1, "Inlet", "In", sensors_ok, error_msg);
-Thermocouple thermocouple_2(THERMOCOUPLE_PIN_2, "Outlet", "Out", sensors_ok, error_msg);
-
-
-//declare all valves
-Valve valve_fuel_pre(FUEL_PRE_PIN, "fuel pre", "fuel_pre_setting");
-Valve valve_fuel_main(FUEL_MAIN_PIN, "fuel main", "fuel_main_setting");
-Valve valve_ox_pre(OX_PRE_PIN, "oxygen pre", "ox_pre_setting");
-Valve valve_ox_main(OX_MAIN_PIN, "oxygen main", "ox_main_setting");
-Valve valve_n2_fill(N2_FILL_PIN, "n2 fill", "nitro_fill_setting");
-Valve valve_n2_drain(N2_DRAIN_PIN, "n2 drain", "nitro_drain_setting");
-
-Igniter igniter(IGNITER_PIN);
-
 // Generally-used variables for parsing commands
 char data[10];
 char data_name[20];
 
-// Calling this performs a software reset of the board, reinitializing sensors
-// TODO: Reset causes a seg fault and kills the program
-//       Could maybe just add a process to always restart it
-void (*reset)(void) = 0;
-
-// Function to replace Arduino.h millis()
-unsigned int millis () {
-  struct timeval t ;
-  gettimeofday ( & t , NULL ) ;
-  return t.tv_sec * 1000 + ( t.tv_usec + 500 ) / 1000 ;
-}
-
-// Set the state variable and send it the state to the GUI
-void set_state(state_t state, state_t * state_var) {
-  *state_var = state;
-  SEND(status, states[state], "%s");
-}
-
+// State variables
 long start_time     = 0;
 long shutdown_time  = 0;
 long heartbeat_time = 0;
 long ignition_time  = 0;
+state_t state;
 
-state_t state = STAND_BY;
+// Sensor status variables 
+bool sensors_ok = true;
+std::string error_msg = "";
+
+// Initialize pressure transducers
+PressureTransducer pressure_fuel          (PRESSURE_FUEL,          "fuel",            "Fl",  sensors_ok, error_msg);
+PressureTransducer pressure_ox            (PRESSURE_OX,            "oxygen",          "Ox",  sensors_ok, error_msg);
+PressureTransducer pressure_fuel_injector (PRESSURE_FUEL_INJECTOR, "injector fuel",   "FlE", sensors_ok, error_msg);
+PressureTransducer pressure_ox_injector   (PRESSURE_OX_INJECTOR,   "injector oxygen", "OxE", sensors_ok, error_msg);
+
+// Initialize load cells
+LoadCell loadcell(LOAD_CELL_1_DOUT, LOAD_CELL_1_CLK, LOAD_CELL_1_CALIBRATION_FACTOR, 1, sensors_ok, error_msg);
+
+// Initialize thermocouples 
+Thermocouple thermocouple_1(THERMOCOUPLE_PIN_1, "Inlet",  "In",  sensors_ok, error_msg);
+Thermocouple thermocouple_2(THERMOCOUPLE_PIN_2, "Outlet", "Out", sensors_ok, error_msg);
+
+// Initialize valves
+Valve valve_fuel_pre  (FUEL_PRE_PIN,  "fuel pre",    "fuel_pre_setting");
+Valve valve_fuel_main (FUEL_MAIN_PIN, "fuel main",   "fuel_main_setting");
+Valve valve_ox_pre    (OX_PRE_PIN,    "oxygen pre",  "ox_pre_setting");
+Valve valve_ox_main   (OX_MAIN_PIN,   "oxygen main", "ox_main_setting");
+Valve valve_n2_fill   (N2_FILL_PIN,   "n2 fill",     "nitro_fill_setting");
+Valve valve_n2_drain  (N2_DRAIN_PIN,  "n2 drain",    "nitro_drain_setting");
+
+Igniter igniter(IGNITER_PIN);
+
+// Function to replace Arduino.h millis()
+unsigned int millis () {
+  struct timeval time ;
+  gettimeofday ( & time , NULL ) ;
+  return time.tv_sec * 1000 + ( time.tv_usec + 500 ) / 1000 ;
+}
 
 // Update hearbeat_time to have the current time
 void heartbeat(){
   heartbeat_time = millis();
 }
 
-void init_autosequence(){
-  set_state(STAND_BY, &state);
-}
+// Set the state variable and send it the state to the GUI
+#define SET_STATE(newState)     \
+  state = newState;             \
+  SEND(status, #newState, "%s");\
+
+// Calling this performs a software reset of the board, reinitializing sensors
+// TODO: Reset causes a seg fault and kills the program
+//       Could maybe just add a process to always restart it
+void (*reset)(void) = 0;
 
 void start_countdown(){
-  #if CONFIGURATION != DEMO
-    if (sensors_ok == false){
-      printf("Countdown aborted due to sensor failure\n");
-      set_state(STAND_BY, &state);
-    }else
-  #endif
-  if (valve_fuel_pre.m_current_state  ||
+  if (CHECK_SENSORS && sensors_ok == false){
+    printf("Countdown aborted due to sensor failure\n");      
+    SET_STATE(STAND_BY);
+  } 
+  else if (valve_fuel_pre.m_current_state  ||
       valve_fuel_main.m_current_state ||
       valve_ox_pre.m_current_state    ||
       valve_ox_main.m_current_state   ||
       valve_n2_fill.m_current_state   ||
       valve_n2_drain.m_current_state  ){
         printf("Countdown aborted due to unexpected initial valve state.\n");
-        set_state(STAND_BY, &state);
+        SET_STATE(STAND_BY);
   }
   else{
     printf("Countdown has started\n");
-    set_state(TERMINAL_COUNT, &state);
+    SET_STATE(TERMINAL_COUNT);
     // Save the current time for reference later
     start_time = millis();
     heartbeat();
@@ -128,14 +110,14 @@ void abort_autosequence(){
   printf("run aborted\n");
   switch (state){ 
     case TERMINAL_COUNT:
-      set_state(STAND_BY, &state);
+      SET_STATE(STAND_BY);
       break;
 
     case PRESTAGE_READY:
       valve_n2_fill.set_valve(0);
       valve_fuel_pre.set_valve(0);
       valve_ox_pre.set_valve(0);
-      set_state(STAND_BY, &state);
+      SET_STATE(STAND_BY);
       break;
 
     case PRESTAGE:
@@ -143,7 +125,7 @@ void abort_autosequence(){
       valve_fuel_pre.set_valve(0);
       valve_ox_pre.set_valve(0);
       igniter.reset_igniter();
-      set_state(COOL_DOWN, &state);
+      SET_STATE(COOL_DOWN);
       shutdown_time = millis();
       break;
 
@@ -151,7 +133,7 @@ void abort_autosequence(){
       valve_n2_fill.set_valve(0);
       valve_fuel_pre.set_valve(0);
       valve_ox_pre.set_valve(0);
-      set_state(SHUTDOWN, &state);
+      SET_STATE(SHUTDOWN);
       shutdown_time = millis();
       break;
 
@@ -172,28 +154,24 @@ void run_control(){
   }
   
   // Check for recent communication with GUI
-  #if CONFIGURATION == MK_2_FULL || CONFIGURATION == MK_2_LOW
-    if (state!=STAND_BY  &&  state!=COOL_DOWN  &&  millis() > heartbeat_time + HEARTBEAT_TIMEOUT){
-      printf("Loss of data link\n");
-      abort_autosequence();
-    }
-  #endif
+  if (state!=STAND_BY  &&  state!=COOL_DOWN  &&  millis() > heartbeat_time + HEARTBEAT_TIMEOUT){
+    printf("Loss of data link\n");
+    abort_autosequence();
+  }
 
   switch (state){
     case TERMINAL_COUNT:
       // Check sensor status
-      #if CONFIGURATION != DEMO
-        if (!sensors_ok){
-          printf("Sensor failure\n");
-          abort_autosequence();
-        }else
-      #endif
+      if (CHECK_SENSORS && sensors_ok == false){ 
+        printf("Sensor failure\n");
+        abort_autosequence();
+      }
       // Open fuel_pre, n2_fill, ox_pre
-      if (run_time >= PRESTAGE_PREP_TIME){
+      else if (run_time >= PRESTAGE_PREP_TIME){
         valve_fuel_pre.set_valve(1);
         valve_n2_fill.set_valve(1);
         valve_ox_pre.set_valve(1);
-        set_state(PRESTAGE_READY, &state);
+        SET_STATE(PRESTAGE_READY);
       }
       break;
 
@@ -202,7 +180,7 @@ void run_control(){
       if (run_time >= PRESTAGE_TIME){
         igniter.fire_igniter();
         ignition_time = millis();
-        set_state(PRESTAGE, &state);
+        SET_STATE(PRESTAGE);
       }
       break;
 
@@ -211,18 +189,16 @@ void run_control(){
       if (run_time >= MAINSTAGE_TIME){
         valve_fuel_main.set_valve(1);
         valve_ox_main.set_valve(1);
-        set_state(MAINSTAGE, &state);
+        SET_STATE(MAINSTAGE);
       }
       break;
 
     case MAINSTAGE:
       // Check sensor status
-      #if CONFIGURATION != DEMO
-        if (!sensors_ok){
-          printf("Sensor Failure\n");
-          abort_autosequence();
-        }
-      #endif
+      if (CHECK_SENSORS && sensors_ok == false){
+        printf("Sensor Failure\n");
+        abort_autosequence();
+      }
       //Check outlet temperature
       if (thermocouple_2.m_current_temp >= MAX_COOLANT_TEMP){
         printf("Temperature reached critical level. Shuttung down.\n");
@@ -238,7 +214,7 @@ void run_control(){
       if (run_time >= RUN_TIME){
         valve_ox_pre.set_valve(0);
         shutdown_time = millis();
-        set_state(OXYGEN_SHUTDOWN, &state);
+        SET_STATE(OXYGEN_SHUTDOWN);
       }
       break;
 
@@ -247,7 +223,7 @@ void run_control(){
       if (millis() >= shutdown_time + OX_LEADTIME){
         valve_n2_fill.set_valve(0);
         valve_fuel_pre.set_valve(0);
-        set_state(SHUTDOWN, &state);
+        SET_STATE(SHUTDOWN);
       }
       break;
 
@@ -257,7 +233,7 @@ void run_control(){
         valve_ox_main.set_valve(0);
         valve_fuel_main.set_valve(0);
         valve_n2_drain.set_valve(1);
-        set_state(COOL_DOWN, &state);
+        SET_STATE(COOL_DOWN);
       }
       break;
 
@@ -269,7 +245,7 @@ void run_control(){
       if (millis() - shutdown_time >= COOLDOWN_TIME){
         printf("Run finished\n");
         valve_n2_drain.set_valve(0);
-        set_state(STAND_BY, &state);
+        SET_STATE(STAND_BY);
         start_time = 0;
       }
       break;
@@ -299,7 +275,7 @@ void setup() {
     thermocouple_2.init_thermocouple();
 
     // Set initial state
-    init_autosequence();
+    SET_STATE(STAND_BY);
 
     printf("Setup Complete\n");
 }
