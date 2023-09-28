@@ -23,10 +23,6 @@ typedef enum{
   COOL_DOWN
 }  state_t;
 
-// Generally-used variables for parsing commands
-char data[10];
-char data_name[20];
-
 // State variables
 long start_time     = 0;
 long shutdown_time  = 0;
@@ -59,6 +55,7 @@ Valve valve_ox_main   (OX_MAIN_PIN,   "oxygen main", "ox_main_setting");
 Valve valve_n2_fill   (N2_FILL_PIN,   "n2 fill",     "nitro_fill_setting");
 Valve valve_n2_drain  (N2_DRAIN_PIN,  "n2 drain",    "nitro_drain_setting");
 
+// Initialize ignitor
 Igniter igniter(IGNITER_PIN);
 
 // Function to replace Arduino.h millis()
@@ -66,11 +63,6 @@ unsigned int millis () {
   struct timeval time ;
   gettimeofday ( & time , NULL ) ;
   return time.tv_sec * 1000 + ( time.tv_usec + 500 ) / 1000 ;
-}
-
-// Update hearbeat_time to have the current time
-void heartbeat(){
-  heartbeat_time = millis();
 }
 
 // Set the state variable and send it the state to the GUI
@@ -102,7 +94,7 @@ void start_countdown(){
     SET_STATE(TERMINAL_COUNT);
     // Save the current time for reference later
     start_time = millis();
-    heartbeat();
+    heartbeat_time = millis();
   }
 }
 
@@ -257,10 +249,6 @@ void run_control(){
 
 // Main code
 void setup() {
-    // Initialize buffers
-    memset(data, 0, 10);
-    memset(data_name, 0, 20);
-
     // Initialize connection
     printf("LPRD Static Test Driver\n");
     printf("Blocking and waiting for connection...\n");
@@ -281,6 +269,10 @@ void setup() {
 }
 
 void loop() {
+    // Buffers for parsing commands
+    char data[10];
+    char data_name[20];
+
     // Grab force data
     loadcell.updateForces();
     
@@ -347,7 +339,7 @@ void loop() {
     }
 
     READ_FLAG(heartbeat) {
-        heartbeat();
+        heartbeat_time = millis();
     }
     READ_FLAG(reset) {
         printf("Resetting board\n");
