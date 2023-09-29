@@ -32,20 +32,19 @@ state_t state;
 
 // Sensor status variables 
 bool sensors_ok = true;
-std::string error_msg = "";
 
 // Initialize pressure transducers
-PressureTransducer pressure_fuel          (PRESSURE_FUEL,          "fuel",            "Fl",  sensors_ok, error_msg);
-PressureTransducer pressure_ox            (PRESSURE_OX,            "oxygen",          "Ox",  sensors_ok, error_msg);
-PressureTransducer pressure_fuel_injector (PRESSURE_FUEL_INJECTOR, "injector fuel",   "FlE", sensors_ok, error_msg);
-PressureTransducer pressure_ox_injector   (PRESSURE_OX_INJECTOR,   "injector oxygen", "OxE", sensors_ok, error_msg);
+PressureTransducer pressure_fuel          (PRESSURE_FUEL,          "fuel",            sensors_ok);
+PressureTransducer pressure_ox            (PRESSURE_OX,            "oxygen",          sensors_ok);
+PressureTransducer pressure_fuel_injector (PRESSURE_FUEL_INJECTOR, "injector fuel",   sensors_ok);
+PressureTransducer pressure_ox_injector   (PRESSURE_OX_INJECTOR,   "injector oxygen", sensors_ok);
 
 // Initialize load cells
-LoadCell loadcell(LOAD_CELL_1_DOUT, LOAD_CELL_1_CLK, LOAD_CELL_1_CALIBRATION_FACTOR, 1, sensors_ok, error_msg);
+LoadCell loadcell(LOAD_CELL_1_DOUT, LOAD_CELL_1_CLK, LOAD_CELL_1_CALIBRATION_FACTOR, sensors_ok);
 
 // Initialize thermocouples 
-Thermocouple thermocouple_1(THERMOCOUPLE_PIN_1, "Inlet",  "In",  sensors_ok, error_msg);
-Thermocouple thermocouple_2(THERMOCOUPLE_PIN_2, "Outlet", "Out", sensors_ok, error_msg);
+// Thermocouple thermocouple_1(THERMOCOUPLE_PIN_1, "Inlet",  sensors_ok);
+// Thermocouple thermocouple_2(THERMOCOUPLE_PIN_2, "Outlet", sensors_ok);
 
 // Initialize valves
 Valve valve_fuel_pre  (FUEL_PRE_PIN,  "fuel pre",    "fuel_pre_setting");
@@ -192,10 +191,10 @@ void run_control(){
         abort_autosequence();
       }
       //Check outlet temperature
-      if (thermocouple_2.m_current_temp >= MAX_COOLANT_TEMP){
-        printf("Temperature reached critical level. Shuttung down.\n");
-        abort_autosequence();
-      }
+      // if (thermocouple_2.m_current_temp >= MAX_COOLANT_TEMP){
+        // printf("Temperature reached critical level. Shuttung down.\n");
+        // abort_autosequence();
+      // }
       // Check Force
       else if (run_time >= THRUST_CHECK_TIME && loadcell.m_current_force < MIN_THRUST){
         printf("Thrust below critical level. Shutting down.\n");
@@ -259,8 +258,8 @@ void setup() {
     loadcell.init_loadcell();
 
     // Initialize Thermocouples
-    thermocouple_1.init_thermocouple();
-    thermocouple_2.init_thermocouple();
+    // thermocouple_1.init_thermocouple();
+    // thermocouple_2.init_thermocouple();
 
     // Set initial state
     SET_STATE(STAND_BY);
@@ -283,12 +282,8 @@ void loop() {
     pressure_ox_injector.updatePressures();
     
     // Grab thermocouple data 
-    thermocouple_1.updateTemps();
-    thermocouple_2.updateTemps();
-
-    // Update sensor diagnostic message on GUI
-    printf("%s\n", error_msg.c_str());
-    error_msg = "";
+    // thermocouple_1.updateTemps();
+    // thermocouple_2.updateTemps();
 
     // Run autonomous control
     run_control();
@@ -297,8 +292,8 @@ void loop() {
     BEGIN_SEND
         SEND_ITEM(force, loadcell.m_current_force, "%f")
         
-        SEND_ITEM(outlet_temp, thermocouple_1.m_current_temp, "%f")
-        SEND_ITEM(inlet_temp, thermocouple_2.m_current_temp, "%f")
+        // SEND_ITEM(outlet_temp, thermocouple_1.m_current_temp, "%f")
+        // SEND_ITEM(inlet_temp, thermocouple_2.m_current_temp, "%f")
         
         SEND_ITEM(fuel_press, pressure_fuel.m_current_pressure, "%f")
         SEND_ITEM(ox_press, pressure_ox.m_current_pressure, "%f")

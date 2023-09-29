@@ -19,7 +19,7 @@ class LoadCell : public Sensor
  public:
     float m_current_force;
 
-    LoadCell(u_int8_t dout, u_int8_t clk, double cal, int num, bool& sensors_ok, std::string& error_msg);
+    LoadCell(u_int8_t dout, u_int8_t clk, double cal, bool& sensors_ok);
 
     void init_loadcell();
 

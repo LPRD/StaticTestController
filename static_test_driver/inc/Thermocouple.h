@@ -13,12 +13,9 @@ class Thermocouple : public Sensor
     DallasTemperature m_thermocouple;
     DeviceAddress m_address;
   public:
-    const std::string m_sensor_name;
-    const std::string m_sensor_short_name;
-
     float m_current_temp;
   
-    Thermocouple(int pin, const std::string& name, const std::string& shortname, bool& sensors_ok, std::string& error_msg);
+    Thermocouple(int pin, const std::string& name, bool& sensors_ok);
   
     void init_thermocouple();
 

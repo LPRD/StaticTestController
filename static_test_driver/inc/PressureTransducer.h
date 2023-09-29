@@ -19,7 +19,7 @@ class PressureTransducer : public Sensor
      float m_current_pressure;    
      bool m_zero_ready;
 
-    PressureTransducer(int pin, std::string name, std::string shortname, bool& sensors_ok, std::string&error_msg);
+    PressureTransducer(int pin, std::string name, bool& sensors_ok);
 
     float read_pressure();
 

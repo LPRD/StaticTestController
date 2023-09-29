@@ -2,8 +2,8 @@
 #include <math.h>
 #include "LoadCell.h"
 
-LoadCell::LoadCell(u_int8_t dout, u_int8_t clk, double cal, int num, bool& sensors_ok, std::string& error_msg):
-        Sensor(sensors_ok, error_msg, "LoadCell"+std::to_string(num), "LC"+std::to_string(num)),
+LoadCell::LoadCell(u_int8_t dout, u_int8_t clk, double cal, bool& sensors_ok):
+        Sensor(sensors_ok, "LoadCell"),
         m_scale()
 {
     m_dout = dout;
@@ -46,7 +46,7 @@ float LoadCell::read_force() {
     if (is_ready) {
         result = m_scale.get_units();
     }
-    error_check(is_ready && !isnan(result) && result > FORCE_MIN_VALID && result < FORCE_MAX_VALID, "   Force");
+    error_check(is_ready && !isnan(result) && result > FORCE_MIN_VALID && result < FORCE_MAX_VALID);
     return result;
 }
 
