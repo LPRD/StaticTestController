@@ -27,8 +27,15 @@ void wait_for_connection() {
 
   // Create a TCP socket
   if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
-      perror("socket failed");
+      perror("socket");
       exit(EXIT_FAILURE);
+  }
+
+  // Set the socket to reusable so we can restart quickly if the program crashes
+  int reuse = 1;
+  if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse)) == -1) {
+    perror("setsockopt");
+    exit(EXIT_FAILURE);
   }
 
   address.sin_family = AF_INET;
@@ -47,6 +54,7 @@ void wait_for_connection() {
       exit(EXIT_FAILURE);
   }
 
+  // Accept gui connection
   if ((client_fd = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
       perror("accept");
   } else {

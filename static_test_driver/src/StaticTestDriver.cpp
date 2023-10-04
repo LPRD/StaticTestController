@@ -69,11 +69,6 @@ unsigned int millis () {
   state = newState;             \
   SEND(status, #newState, "%s");\
 
-// Calling this performs a software reset of the board, reinitializing sensors
-// TODO: Reset causes a seg fault and kills the program
-//       Could maybe just add a process to always restart it
-void (*reset)(void) = 0;
-
 void start_countdown(){
   if (CHECK_SENSORS && sensors_ok == false){
     printf("Countdown aborted due to sensor failure\n");      
@@ -338,7 +333,9 @@ void loop() {
     }
     READ_FLAG(reset) {
         printf("Resetting board\n");
-        reset();
+        // Quit program and allow manager to restart it.
+        // 5 is arbitrary but it must be non zero
+        exit(5); 
     }
     READ_FLAG(start) {
         start_countdown();
