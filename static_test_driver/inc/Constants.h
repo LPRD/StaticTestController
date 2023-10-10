@@ -12,28 +12,28 @@
 // PIN CONSTANTS
 
 // igniter
-#define IGNITER_PIN 15
+#define IGNITER_PIN 4
 
 // pressure tranducers
-#define PRESSURE_FUEL 0//A0
-#define PRESSURE_OX 1//A1
-#define PRESSURE_FUEL_INJECTOR 2//A2
-#define PRESSURE_OX_INJECTOR 3//A3
+#define PRESSURE_FUEL 0
+#define PRESSURE_OX 2
+#define PRESSURE_FUEL_INJECTOR 1
+#define PRESSURE_OX_INJECTOR 3
 
 //valves
-#define FUEL_PRE_PIN 34
-#define FUEL_MAIN_PIN 33
-#define OX_PRE_PIN 32
-#define OX_MAIN_PIN 31
-#define N2_FILL_PIN 29
-#define N2_DRAIN_PIN 28
+#define FUEL_PRE_PIN 67
+#define FUEL_MAIN_PIN 68
+#define OX_PRE_PIN 44
+#define OX_MAIN_PIN 26
+#define N2_FILL_PIN 46
+#define N2_DRAIN_PIN 65
 
 // Load cell
-#define LOAD_CELL_1_DOUT 11
+#define LOAD_CELL_1_DOUT 66
 #define LOAD_CELL_2_DOUT 10
 #define LOAD_CELL_3_DOUT 9
 #define LOAD_CELL_4_DOUT 8
-#define LOAD_CELL_1_CLK 7
+#define LOAD_CELL_1_CLK 50
 #define LOAD_CELL_2_CLK 6
 #define LOAD_CELL_3_CLK 5
 #define LOAD_CELL_4_CLK 4
