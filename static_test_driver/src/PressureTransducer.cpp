@@ -32,18 +32,19 @@ int analogRead(int pin) {
     }
 
     // Read file
-    int buffer;
+    char buffer[5];
     if (read(fd, &buffer, 4) == -1) {
         perror("read");
         return -1;
     }
+    buffer[4] = '\0';
 
     if (close(fd) == -1) {
         perror("close");
         return -1;
     }
     
-    return buffer;
+    return atoi(buffer);
 }
 
 PressureTransducer::PressureTransducer(int pin, std::string name, bool& sensors_ok) :
@@ -56,8 +57,7 @@ PressureTransducer::PressureTransducer(int pin, std::string name, bool& sensors_
 
 
 float PressureTransducer::read_pressure() {
-    // /sys/devices/platform/ocp/44e0d000.tscadc/TI-am335x-adc.0.auto/iio:device0/in_voltage0_raw
-    float result = (analogRead(m_pressurepin) * 1.8 / 4096.0);// * PRESSURE_CALIBRATION_FACTOR - PRESSURE_OFFSET;
+    float result = (analogRead(m_pressurepin) * 1000.0 / 4096.0);
     error_check(result > PRESSURE_MIN_VALID && result < PRESSURE_MAX_VALID);
     return result;
 }
