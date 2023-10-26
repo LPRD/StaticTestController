@@ -40,7 +40,11 @@ PressureTransducer pressure_fuel_injector (PRESSURE_FUEL_INJECTOR, "injector fue
 PressureTransducer pressure_ox_injector   (PRESSURE_OX_INJECTOR,   "injector oxygen", sensors_ok);
 
 // Initialize load cells
-LoadCell loadcell(LOAD_CELL_1_DOUT, LOAD_CELL_1_CLK, LOAD_CELL_1_CALIBRATION_FACTOR, sensors_ok);
+LoadCell loadcell_1(LOAD_CELL_1_DOUT, LOAD_CELL_1_CLK, LOAD_CELL_1_CALIBRATION_FACTOR, sensors_ok);
+LoadCell loadcell_2(LOAD_CELL_2_DOUT, LOAD_CELL_2_CLK, LOAD_CELL_2_CALIBRATION_FACTOR, sensors_ok);
+LoadCell loadcell_3(LOAD_CELL_3_DOUT, LOAD_CELL_3_CLK, LOAD_CELL_3_CALIBRATION_FACTOR, sensors_ok);
+LoadCell loadcell_4(LOAD_CELL_4_DOUT, LOAD_CELL_4_CLK, LOAD_CELL_4_CALIBRATION_FACTOR, sensors_ok);
+
 
 // Initialize thermocouples 
 // Thermocouple thermocouple_1(THERMOCOUPLE_PIN_1, "Inlet",  sensors_ok);
@@ -191,7 +195,9 @@ void run_control(){
         // abort_autosequence();
       // }
       // Check Force
-      else if (run_time >= THRUST_CHECK_TIME && loadcell.m_current_force < MIN_THRUST){
+      else if (run_time >= THRUST_CHECK_TIME && 
+        (loadcell_1.m_current_force + loadcell_2.m_current_force +
+         loadcell_3.m_current_force + loadcell_4.m_current_force) < MIN_THRUST){
         printf("Thrust below critical level. Shutting down.\n");
         abort_autosequence();
       }
@@ -250,7 +256,10 @@ void setup() {
     printf("Connected\n");
 
     // Initialize LC
-    loadcell.init_loadcell();
+    loadcell_1.init_loadcell();
+    loadcell_2.init_loadcell();
+    loadcell_3.init_loadcell();
+    loadcell_4.init_loadcell();
 
     // Initialize Thermocouples
     // thermocouple_1.init_thermocouple();
@@ -268,8 +277,11 @@ void loop() {
     char data_name[20];
 
     // Grab force data
-    loadcell.updateForces();
-    
+    loadcell_1.updateForces();
+    loadcell_2.updateForces();
+    loadcell_3.updateForces();
+    loadcell_4.updateForces();
+
     // Update pressures
     pressure_fuel.updatePressures();
     pressure_ox.updatePressures();
@@ -285,8 +297,11 @@ void loop() {
 
     // Send collected data
     BEGIN_SEND
-        SEND_ITEM(force, loadcell.m_current_force, "%f")
-        
+        SEND_ITEM(force1, loadcell_1.m_current_force, "%f")
+        SEND_ITEM(force2, loadcell_2.m_current_force, "%f")
+        SEND_ITEM(force3, loadcell_3.m_current_force, "%f")
+        SEND_ITEM(force4, loadcell_4.m_current_force, "%f")
+
         // SEND_ITEM(outlet_temp, thermocouple_1.m_current_temp, "%f")
         // SEND_ITEM(inlet_temp, thermocouple_2.m_current_temp, "%f")
         
@@ -311,8 +326,10 @@ void loop() {
     BEGIN_READ
     READ_FLAG(zero_force) {
         printf("Zeroing load cells\n");
-        loadcell.zeroForces(); 
-    }
+        loadcell_1.zeroForces(); 
+        loadcell_2.zeroForces(); 
+        loadcell_3.zeroForces(); 
+        loadcell_4.zeroForces();     }
 
     READ_FLAG(zero_pressure) {
         if (pressure_fuel.m_zero_ready || pressure_ox.m_zero_ready) {
