@@ -57,7 +57,7 @@ PressureTransducer::PressureTransducer(int pin, std::string name, bool& sensors_
 
 
 float PressureTransducer::read_pressure() {
-    float result = (analogRead(m_pressurepin) * 1000.0 / 4096.0);
+    float result = (analogRead(m_pressurepin) * 0.275 - 125);
     error_check(result > PRESSURE_MIN_VALID && result < PRESSURE_MAX_VALID);
     return result;
 }
